@@ -4,7 +4,7 @@ import norswap.autumn.positions.Span;
 import norswap.utils.Util;
 import java.util.List;
 
-
+//
 // an atom is a predicate symbol with the right number of terms ex song(22, taylor swift)
 
 public class AtomsNode extends ExpressionNode{
