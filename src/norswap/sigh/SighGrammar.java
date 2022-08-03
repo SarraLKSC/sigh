@@ -6,6 +6,12 @@ import norswap.sigh.ast.*;
 import static norswap.sigh.ast.UnaryOperator.NOT;
 
 @SuppressWarnings("Convert2MethodRef")
+// TO-DO:
+//      - include PROLOG syntax:
+//          for a fact   song( 22, 'Taylor Swift')
+//          for a query   ?-singer(Laylow)
+//          for a rule   feat(x,,y):- singer(x), singer(y), song(z,x), song(z,y)
+//      - create needed tests
 public class SighGrammar extends Grammar
 {
     // ==== LEXICAL ===========================================================
@@ -52,6 +58,14 @@ public class SighGrammar extends Grammar
     public rule DOLLAR          = word("$");
     public rule COMMA           = word(",");
 
+    // LP lexical additions
+
+    public rule QUERY           = word("-?");
+    public rule NECK_OP            = word(":-");
+
+    //------------------------------------------------------------//
+
+
     public rule _var            = reserved("var");
     public rule _fun            = reserved("fun");
     public rule _struct         = reserved("struct");
@@ -89,7 +103,9 @@ public class SighGrammar extends Grammar
     public rule identifier =
         identifier(seq(choice(alpha, '_'), id_part.at_least(0)))
         .push($ -> $.str());
-    
+
+
+
     // ==== SYNTACTIC =========================================================
     
     public rule reference =
@@ -273,6 +289,15 @@ public class SighGrammar extends Grammar
         seq(ws, statement.at_least(1))
         .as_list(StatementNode.class)
         .push($ -> new RootNode($.span(), $.$[0]));
+
+
+    // LP lexical additions
+
+    public rule atom            = seq(identifier,LPAREN,identifier,RPAREN);
+
+
+
+    //------------------------------------------------------------//
 
     @Override public rule root () {
         return root;
