@@ -158,9 +158,14 @@ public class SighGrammar extends Grammar
     public rule clause=
         seq(LOGIC_P,atom,NECK_OP,atoms)
             .push($-> new ClauseDeclarationNode($.span(),$.$[0],$.$[1],$.$[2]));
+
     // in our language we expect a fact as LP id ( term1, term2)
     public rule fact = seq(LOGIC_P,atom)
         .push($-> new FactDeclarationNode($.span(),$.$[0],$.$[1]));
+
+    //in our language we expect LP -? open(saturday)
+    public rule query = seq(LOGIC_P,QUERY,atom)
+        .push($-> new QueryDeclarationNode($.span(),$.$[0],$.$[1]));
 
 
     //------------------------------------------------------------//
