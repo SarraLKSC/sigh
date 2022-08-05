@@ -82,9 +82,9 @@ public class GrammarTests extends AutumnTestFixture {
         rule = grammar.expression;
         successExpect("[1][0]", new ArrayAccessNode(null,
             new ArrayLiteralNode(null, asList(intlit(1))), intlit(0)));
-        successExpect("[1].length", new FieldAccessNode(null,
-            new ArrayLiteralNode(null, asList(intlit(1))), "length"));
-        successExpect("p.x", new FieldAccessNode(null, new ReferenceNode(null, "p"), "x"));
+        successExpect("[1].Length", new FieldAccessNode(null,
+            new ArrayLiteralNode(null, asList(intlit(1))), "Length"));
+        successExpect("P.X", new FieldAccessNode(null, new ReferenceNode(null, "P"), "X"));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -92,19 +92,19 @@ public class GrammarTests extends AutumnTestFixture {
     @Test public void testDeclarations() {
         rule = grammar.statement;
 
-        successExpect("var x: Int = 1", new VarDeclarationNode(null,
-            "x", new SimpleTypeNode(null, "Int"), intlit(1)));
+        successExpect("var X: Int = 1", new VarDeclarationNode(null,
+            "X", new SimpleTypeNode(null, "Int"), intlit(1)));
 
         successExpect("struct P {}", new StructDeclarationNode(null, "P", asList()));
 
-        successExpect("struct P { var x: Int; var y: Int }",
+        successExpect("struct P { var X: Int; var Y: Int }",
             new StructDeclarationNode(null, "P", asList(
-                new FieldDeclarationNode(null, "x", new SimpleTypeNode(null, "Int")),
-                new FieldDeclarationNode(null, "y", new SimpleTypeNode(null, "Int")))));
+                new FieldDeclarationNode(null, "X", new SimpleTypeNode(null, "Int")),
+                new FieldDeclarationNode(null, "Y", new SimpleTypeNode(null, "Int")))));
 
-        successExpect("fun f (x: Int): Int { return 1 }",
+        successExpect("fun f (X: Int): Int { return 1 }",
             new FunDeclarationNode(null, "f",
-                asList(new ParameterNode(null, "x", new SimpleTypeNode(null, "Int"))),
+                asList(new ParameterNode(null, "X", new SimpleTypeNode(null, "Int"))),
                 new SimpleTypeNode(null, "Int"),
                 new BlockNode(null, asList(new ReturnNode(null, intlit(1))))));
     }

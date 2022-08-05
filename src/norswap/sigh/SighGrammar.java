@@ -61,7 +61,8 @@ public class SighGrammar extends Grammar
     // LP lexical additions
 
     public rule QUERY           = word("-?");
-    public rule NECK_OP            = word(":-");
+    public rule NECK_OP         = word(":-");
+    public rule LOGIC_P         = word("LP");
 
     //------------------------------------------------------------//
 
@@ -107,7 +108,15 @@ public class SighGrammar extends Grammar
 
 
     // ==== SYNTACTIC =========================================================
-    
+
+    // harry
+    public rule term = identifier;
+    // harry,louis,david,Riadh
+    public rule terms = lazy(() ->
+        this.term.sep(0,COMMA)
+            .as_list(TermNode.class));
+
+    //-------------------------------------------------------------------//
     public rule reference =
         identifier
         .push($ -> new ReferenceNode($.span(), $.$[0]));
@@ -115,7 +124,7 @@ public class SighGrammar extends Grammar
     public rule constructor =
         seq(DOLLAR, reference)
         .push($ -> new ConstructorNode($.span(), $.$[0]));
-    
+
     public rule simple_type =
         identifier
         .push($ -> new SimpleTypeNode($.span(), $.$[0]));
@@ -132,6 +141,29 @@ public class SighGrammar extends Grammar
         seq(LSQUARE, expressions, RSQUARE)
         .push($ -> new ArrayLiteralNode($.span(), $.$[0]));
 
+    // LP lexical additions
+
+    // an atom is a predicate symbol with the right number of terms ex song(22, taylor swift)
+    public rule atom =
+        seq(identifier,LPAREN,terms,RPAREN)
+            .push($->new AtomNode($.span(),$.$[0],$.$[1]));
+
+    //atoms ->   song(22,taylor swift),singer(taylor swift), project(data science)
+    public rule atoms = lazy(() ->
+        this.atom.sep(0,COMMA)
+            .as_list(ExpressionNode.class));
+
+    // a clause has the form A :- B, C,D... where A,B,C and D are atoms
+     // in our language we expect LP A:- B,C,D
+    public rule clause=
+        seq(LOGIC_P,atom,NECK_OP,atoms)
+            .push($-> new ClauseDeclarationNode($.span(),$.$[0],$.$[1],$.$[2]));
+    // in our language we expect a fact as LP id ( term1, term2)
+    public rule fact = seq(LOGIC_P,atom)
+        .push($-> new FactDeclarationNode($.span(),$.$[0],$.$[1]));
+
+
+    //------------------------------------------------------------//
     public rule basic_expression = choice(
         constructor,
         reference,
@@ -139,7 +171,7 @@ public class SighGrammar extends Grammar
         integer,
         string,
         paren_expression,
-        array);
+        array,term);
 
     public rule function_args =
         seq(LPAREN, expressions, RPAREN);
@@ -233,7 +265,9 @@ public class SighGrammar extends Grammar
         this.if_stmt,
         this.while_stmt,
         this.return_stmt,
-        this.expression_stmt));
+        this.expression_stmt,
+        this.fact,
+        this.clause));
 
     public rule statements =
         statement.at_least(0)
@@ -254,6 +288,8 @@ public class SighGrammar extends Grammar
     public rule parameters =
         parameter.sep(0, COMMA)
         .as_list(ParameterNode.class);
+
+
 
     public rule maybe_return_type =
         seq(COLON, type).or_push_null();
@@ -291,13 +327,7 @@ public class SighGrammar extends Grammar
         .push($ -> new RootNode($.span(), $.$[0]));
 
 
-    // LP lexical additions
 
-    public rule atom            = seq(identifier,LPAREN,identifier,RPAREN);
-
-
-
-    //------------------------------------------------------------//
 
     @Override public rule root () {
         return root;

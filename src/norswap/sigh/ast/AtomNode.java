@@ -7,12 +7,12 @@ import java.util.List;
 //
 // an atom is a predicate symbol with the right number of terms ex song(22, taylor swift)
 
-public class AtomsNode extends ExpressionNode{
+public class AtomNode extends ExpressionNode{
 
     public final String name;
     public final List<ExpressionNode> terms;
 
-    public AtomsNode (Span span,Object name,Object terms) {
+    public AtomNode (Span span,Object name,Object terms) {
         super(span);
         this.name=Util.cast(name, String.class);
         this.terms=Util.cast(terms, List.class);
