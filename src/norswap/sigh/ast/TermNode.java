@@ -13,6 +13,7 @@ public class TermNode extends ExpressionNode {
     public TermNode (Span span, Object name) {
         super(span);
         this.name = Util.cast(name, String.class);
+       // System.out.println("yo inside term constructor: "+name);
     }
 
     @Override

@@ -9,8 +9,8 @@ public class QueryDeclarationNode extends DeclarationNode{
     public final List<ExpressionNode> terms;
     public QueryDeclarationNode (Span span, Object name,Object terms) {
         super(span);
-        this.name= Util.cast(String.class);
-        this.terms= Util.cast(List.class);
+        this.name= Util.cast(name,String.class);
+        this.terms= Util.cast(terms,List.class);
 
     }
 

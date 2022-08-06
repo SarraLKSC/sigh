@@ -7,12 +7,14 @@ import java.util.List;
 public class FactDeclarationNode extends DeclarationNode{
 
     public final String name;
-    public final List<TermNode> terms;
+    public final List<ExpressionNode> terms;
 
     public FactDeclarationNode (Span span, Object name, Object terms) {
         super(span);
         this.name = Util.cast(name, String.class);
-        this.terms = Util.cast(terms, List.class);
+        //this.terms = Util.cast(terms, List.class);
+        this.terms=Util.cast(terms,List.class);
+        //System.out.println(" fact "+name+" with term "+terms);
     }
 
 

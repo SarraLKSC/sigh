@@ -24,6 +24,58 @@ public class GrammarTests extends AutumnTestFixture {
 
     // ---------------------------------------------------------------------------------------------
 
+    // LP grammar test addition
+
+    @Test void testLP () {
+        rule=grammar.expression;
+        successExpect("LP",new ReferenceNode(null,"LP"));
+        successExpect("LPC",new ReferenceNode(null,"LPC"));
+    }
+    @Test void testFact(){
+        rule=grammar.statement;
+        successExpect("LP sing ( harry )",new FactDeclarationNode(null,"sing",asList(
+            new TermNode(null,"harry"))
+        ));
+        successExpect("LP song (Style,taylorSwift)", new FactDeclarationNode(null,"song", asList(
+            new TermNode(null,"Style"),
+            new TermNode(null,"taylorSwift")
+        )));
+        successExpect("LP feat( drake,rihanna, takecare )", new FactDeclarationNode(null,"feat",asList(
+            new TermNode(null,"drake"),
+            new TermNode(null,"rihanna"),
+            new TermNode(null,"takecare")
+        )));
+    }
+    @Test void testClause(){
+
+        rule=grammar.statement;
+        successExpect("LPC animal(a) :- dog(a) ", new ClauseDeclarationNode(null,
+            new AtomNode(null,"animal",asList(new TermNode(null,"a"))), asList(
+                new AtomNode(null,"dog",asList(new TermNode(null,"a")))
+            )));
+
+        successExpect("LPC sister(a,b) :- mom(a,c) , mom(b,c)", new ClauseDeclarationNode(null,
+            new AtomNode(null,"sister",asList(new TermNode(null,"a"),new TermNode(null,"b"))),
+            asList(
+            new AtomNode(null,"mom",asList(new TermNode(null,"a"), new TermNode(null,"c"))),
+            new AtomNode(null,"mom",asList(new TermNode(null,"b"), new TermNode(null,"c")))
+        )));
+    }
+
+    @Test void testQuery(){
+        rule= grammar.statement;
+        successExpect("-? boy( baby )", new QueryDeclarationNode(null,"boy",asList(
+            new TermNode(null,"baby")
+        )));
+        successExpect("-? mother( lilly, harry)", new QueryDeclarationNode(null, "mother", asList(
+            new TermNode(null,"lilly"),
+            new TermNode(null,"harry")
+        )));
+    }
+
+
+    //----------------------------------------------------------------------------------------//
+
     @Test
     public void testLiteralsAndUnary () {
         rule = grammar.expression;

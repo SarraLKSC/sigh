@@ -63,6 +63,11 @@ public class SighGrammar extends Grammar
     public rule QUERY           = word("-?");
     public rule NECK_OP         = word(":-");
     public rule LOGIC_P         = word("LP");
+    public rule LOGIC_PC         = word("LPC");
+  //  public rule LOGIC_PQ         = word("LPQ");
+
+
+
 
     //------------------------------------------------------------//
 
@@ -110,11 +115,12 @@ public class SighGrammar extends Grammar
     // ==== SYNTACTIC =========================================================
 
     // harry
-    public rule term = identifier;
+    public rule term = identifier
+        .push($-> new TermNode($.span(),$.$[0]));
     // harry,louis,david,Riadh
-    public rule terms = lazy(() ->
+   public rule terms = lazy(() ->
         this.term.sep(0,COMMA)
-            .as_list(TermNode.class));
+            .as_list(ExpressionNode.class));
 
     //-------------------------------------------------------------------//
     public rule reference =
@@ -156,15 +162,15 @@ public class SighGrammar extends Grammar
     // a clause has the form A :- B, C,D... where A,B,C and D are atoms
      // in our language we expect LP A:- B,C,D
     public rule clause=
-        seq(LOGIC_P,atom,NECK_OP,atoms)
-            .push($-> new ClauseDeclarationNode($.span(),$.$[0],$.$[1],$.$[2]));
+        seq(LOGIC_PC,atom,NECK_OP,atoms)
+            .push($-> new ClauseDeclarationNode($.span(),$.$[0],$.$[1]));
 
     // in our language we expect a fact as LP id ( term1, term2)
-    public rule fact = seq(LOGIC_P,atom)
+    public rule fact = seq(LOGIC_P,identifier,LPAREN,terms,RPAREN)
         .push($-> new FactDeclarationNode($.span(),$.$[0],$.$[1]));
 
     //in our language we expect LP -? open(saturday)
-    public rule query = seq(LOGIC_P,QUERY,atom)
+    public rule query = seq(QUERY,identifier,LPAREN,terms,RPAREN)
         .push($-> new QueryDeclarationNode($.span(),$.$[0],$.$[1]));
 
 
@@ -271,7 +277,7 @@ public class SighGrammar extends Grammar
         this.while_stmt,
         this.return_stmt,
         this.expression_stmt,
-        this.fact,
+        this.fact, this.query,
         this.clause));
 
     public rule statements =
