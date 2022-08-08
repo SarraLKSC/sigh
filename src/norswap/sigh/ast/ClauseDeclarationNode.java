@@ -24,11 +24,11 @@ public class ClauseDeclarationNode extends DeclarationNode {
     }
     @Override
     public String declaredThing () {
-        return name.toString();
+        return "rule";
     }
 
     @Override
     public String contents () {
-        return "fact " + name;
+        return "rule " + name;
     }
 }

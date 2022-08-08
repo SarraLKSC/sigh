@@ -136,6 +136,13 @@ public final class SemanticAnalysis
         walker.register(FunDeclarationNode.class,       PRE_VISIT,  analysis::funDecl);
         walker.register(StructDeclarationNode.class,    PRE_VISIT,  analysis::structDecl);
 
+        //Logic Programming
+        walker.register(QueryDeclarationNode.class,     PRE_VISIT,  analysis::queryDecl);
+        walker.register(FactDeclarationNode.class,      PRE_VISIT,  analysis::factDecl);
+        walker.register(ClauseDeclarationNode.class,    PRE_VISIT,  analysis::clauseDecl);
+        walker.register(FactCallNode.class,             PRE_VISIT,  analysis::factCall);
+        //
+
         walker.register(RootNode.class,                 POST_VISIT, analysis::popScope);
         walker.register(BlockNode.class,                POST_VISIT, analysis::popScope);
         walker.register(FunDeclarationNode.class,       POST_VISIT, analysis::popScope);
@@ -751,16 +758,49 @@ public final class SemanticAnalysis
     }
 
     // ---------------------------------------------------------------------------------------------
+                // LOGIC PROGRAMMING
+    // ---------------------------------------------------------------------------------------------
 
+    private void clauseDecl(ClauseDeclarationNode node){
+        this.inferenceContext = node;
+
+
+    }
+    // ---------------------------------------------------------------------------------------------
+
+    private void queryDecl(QueryDeclarationNode node){
+
+
+
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    private void factDecl(FactDeclarationNode node){
+        scope.declare(node.name,node);
+        scope= new Scope(node,scope);
+        R.set(node,"scope",scope);
+        Attribute[] dependencies = new Attribute[node.terms.size()];
+        forEachIndexed(node.terms,(i,term)->
+            dependencies[i]= term.attr(""));
+
+
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    private void factCall(FactCallNode node){
+
+
+    }
+
+    //----------------------------------------------------------------------------------------------
     private void fieldDecl (FieldDeclarationNode node)
     {
         R.rule(node, "type")
         .using(node.type, "value")
         .by(Rule::copyFirst);
     }
-
     // ---------------------------------------------------------------------------------------------
-
     private void parameter (ParameterNode node)
     {
         R.set(node, "scope", scope);

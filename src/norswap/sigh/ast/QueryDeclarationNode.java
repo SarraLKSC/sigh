@@ -15,17 +15,13 @@ public class QueryDeclarationNode extends DeclarationNode{
     }
 
     @Override
-    public String name () {
-        return name;
-    }
+    public String name () {     return name; }
 
     @Override
     public String declaredThing () {
-        return "Query"+name;
+        return "Query ";
     }
 
     @Override
-    public String contents () {
-        return name;
-    }
+    public String contents () { return "Query "+ name; }
 }

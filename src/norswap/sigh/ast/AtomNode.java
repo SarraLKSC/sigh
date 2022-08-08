@@ -18,26 +18,24 @@ public class AtomNode extends ExpressionNode{
         this.terms=Util.cast(terms, List.class);
     }
 
-    @Override
-    public String contents () {   return name; }
     public String name() {return name;}
 
     //extract from ArrayLiteralNode.java
-    /**  @Override public String contents ()
+    @Override public String contents ()
     {
-    if (components.size() == 0)
+    if (terms.size() == 0)
     return "[]";
 
     int budget = contentsBudget() - 2; // 2 == "[]".length()
     StringBuilder b = new StringBuilder("[");
     int i = 0;
 
-    for (ExpressionNode it: components)
+    for (ExpressionNode it: terms)
     {
     if (i > 0) b.append(", ");
     String contents = it.contents();
     budget -= 2 + contents.length();
-    if (i == components.size() - 1) {
+    if (i == terms.size() - 1) {
     if (budget < 0) break;
     } else {
     if (budget - ", ...".length() < 0) break;
@@ -46,11 +44,11 @@ public class AtomNode extends ExpressionNode{
     ++i;
     }
 
-    if (i < components.size())
+    if (i < terms.size())
     b.append("...");
 
     return b.append(']').toString();
-    }**/
+    }
 
 
 }
