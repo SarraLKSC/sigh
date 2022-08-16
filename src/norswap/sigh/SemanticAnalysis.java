@@ -141,6 +141,8 @@ public final class SemanticAnalysis
         walker.register(FactDeclarationNode.class,      PRE_VISIT,  analysis::factDecl);
         walker.register(ClauseDeclarationNode.class,    PRE_VISIT,  analysis::clauseDecl);
         walker.register(FactCallNode.class,             PRE_VISIT,  analysis::factCall);
+
+        walker.register(TermNode.class,                 PRE_VISIT,  analysis::termLiteral);
         //
 
         walker.register(RootNode.class,                 POST_VISIT, analysis::popScope);
@@ -177,6 +179,13 @@ public final class SemanticAnalysis
 
     private void stringLiteral (StringLiteralNode node) {
         R.set(node, "type", StringType.INSTANCE);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // LP
+    private void termLiteral (TermNode node){
+
+        R.set(node, "type", TermType.INSTANCE);
     }
 
     // ---------------------------------------------------------------------------------------------

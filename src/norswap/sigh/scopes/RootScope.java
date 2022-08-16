@@ -1,6 +1,7 @@
 package norswap.sigh.scopes;
 
 import norswap.sigh.ast.RootNode;
+import norswap.sigh.ast.TermNode;
 import norswap.sigh.types.*;
 import norswap.uranium.Reactor;
 
@@ -29,6 +30,8 @@ public final class RootScope extends Scope
     public final SyntheticDeclarationNode String = decl("String", TYPE);
     public final SyntheticDeclarationNode Void   = decl("Void",   TYPE);
     public final SyntheticDeclarationNode Type   = decl("Type",   TYPE);
+    //LP
+    public final SyntheticDeclarationNode Term   = decl("Term",   TYPE);
 
     // root scope variables
     public final SyntheticDeclarationNode _true  = decl("true",  VARIABLE);
@@ -49,6 +52,7 @@ public final class RootScope extends Scope
         reactor.set(String, "type",       TypeType.INSTANCE);
         reactor.set(Void,   "type",       TypeType.INSTANCE);
         reactor.set(Type,   "type",       TypeType.INSTANCE);
+        reactor.set(Term,   "type",        TypeType.INSTANCE); //LP
 
         reactor.set(Bool,   "declared",   BoolType.INSTANCE);
         reactor.set(Int,    "declared",    IntType.INSTANCE);
@@ -56,6 +60,7 @@ public final class RootScope extends Scope
         reactor.set(String, "declared", StringType.INSTANCE);
         reactor.set(Void,   "declared",   VoidType.INSTANCE);
         reactor.set(Type,   "declared",   TypeType.INSTANCE);
+        reactor.set(Term,   "declared",   TermType.INSTANCE); //LP
 
         reactor.set(_true,  "type",       BoolType.INSTANCE);
         reactor.set(_false, "type",       BoolType.INSTANCE);

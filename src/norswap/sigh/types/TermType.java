@@ -7,6 +7,11 @@ public class TermType extends Type {
     private TermType(){};
 
     @Override
+    public boolean isPrimitive () {
+        return true;
+    }
+
+    @Override
     public String name () {
         return "Term";
     }

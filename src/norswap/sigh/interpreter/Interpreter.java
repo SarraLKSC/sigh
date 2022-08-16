@@ -5,6 +5,8 @@ import norswap.sigh.scopes.DeclarationKind;
 import norswap.sigh.scopes.RootScope;
 import norswap.sigh.scopes.Scope;
 import norswap.sigh.scopes.SyntheticDeclarationNode;
+// additional primitive type
+import norswap.sigh.types.TermType;
 import norswap.sigh.types.FloatType;
 import norswap.sigh.types.IntType;
 import norswap.sigh.types.StringType;
@@ -61,6 +63,9 @@ public final class Interpreter
         this.reactor = reactor;
 
         // expressions
+        //LP
+        visitor.register(TermNode.class,                 this::termLiteral);
+        //
         visitor.register(IntLiteralNode.class,           this::intLiteral);
         visitor.register(FloatLiteralNode.class,         this::floatLiteral);
         visitor.register(StringLiteralNode.class,        this::stringLiteral);
@@ -143,6 +148,11 @@ public final class Interpreter
     private String stringLiteral (StringLiteralNode node) {
         return node.value;
     }
+
+    //LP
+    private String termLiteral(TermNode node) {return node.value;}
+
+    //----------------------------------------------------------------------------------------------
 
     // ---------------------------------------------------------------------------------------------
 
