@@ -2,11 +2,15 @@ import norswap.autumn.AutumnTestFixture;
 import norswap.autumn.positions.LineMapString;
 import norswap.sigh.SemanticAnalysis;
 import norswap.sigh.SighGrammar;
+import norswap.sigh.ast.FactDeclarationNode;
 import norswap.sigh.ast.SighNode;
+import norswap.sigh.ast.TermNode;
 import norswap.uranium.Reactor;
 import norswap.uranium.UraniumTestFixture;
 import norswap.utils.visitors.Walker;
 import org.testng.annotations.Test;
+
+import static java.util.Arrays.asList;
 
 /**
  * NOTE(norswap): These tests were derived from the {@link InterpreterTests} and don't test anything
@@ -44,6 +48,10 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
         walker.walk(((SighNode) ast));
     }
 
+    // ---------------------------------------------------------------------------------------------
+    @Test public void testLP(){
+        successInput("var X: Term = like");
+    }
     // ---------------------------------------------------------------------------------------------
 
     @Test public void testLiteralsAndUnary() {
@@ -152,13 +160,17 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
     }
 
     // ---------------------------------------------------------------------------------------------
-
+    @Test void testFact(){
+        successInput("LP sing ( harry )");
+        successInput("LP song (Style,taylorSwift)");
+        successInput("LP feat( drake,rihanna, takecare )");
+    }
     @Test public void testVarDecl() {
         successInput("var x: Int = 1; return x");
         successInput("var x: Float = 2.0; return x");
-
+        successInput("var X: Term = \'like\'");
         successInput("var x: Int = 0; return x = 3");
-        successInput("var x: String = \"0\"; return x = \"S\"");
+        successInput("var x: String = \"tru\"; return x = \"S\"");
 
         failureInputWith("var x: Int = true", "expected Int but got Bool");
         failureInputWith("return x + 1", "Could not resolve: x");

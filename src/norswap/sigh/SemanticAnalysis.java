@@ -771,14 +771,34 @@ public final class SemanticAnalysis
     // ---------------------------------------------------------------------------------------------
 
     private void clauseDecl(ClauseDeclarationNode node){
-        this.inferenceContext = node;
+        scope.declare(node.name.name,node);
+        scope= new Scope(node,scope);
+        R.set(node,"scope",scope);
+
 
 
     }
     // ---------------------------------------------------------------------------------------------
 
     private void queryDecl(QueryDeclarationNode node){
+        scope.declare(node.name,node);
+        scope= new Scope(node,scope);
+        R.set(node,"scope",scope);
 
+        Attribute[] dependencies = new Attribute[node.terms.size()];
+        forEachIndexed(node.terms,(i,term)->
+            dependencies[i]= term.attr("type"));
+
+        R.rule()
+            .using(dependencies)
+            .by(r->{
+                for(int i=0; i< dependencies.length; i++){
+                    if(!(r.get(i) instanceof TermType)) {
+                        r.error("non term type found where term type required: "+r.get(i),node);
+                    }
+                }
+                r.set(node,"declared",new QueryType(node));
+            });
 
 
     }
@@ -788,9 +808,21 @@ public final class SemanticAnalysis
         scope.declare(node.name,node);
         scope= new Scope(node,scope);
         R.set(node,"scope",scope);
+
         Attribute[] dependencies = new Attribute[node.terms.size()];
         forEachIndexed(node.terms,(i,term)->
-            dependencies[i]= term.attr(""));
+            dependencies[i]= term.attr("type"));
+
+        R.rule()
+            .using(dependencies)
+            .by(r->{
+               for(int i=0; i< dependencies.length; i++){
+                   if(!(r.get(i) instanceof TermType)) {
+                       r.error("non term type found where term type required: "+r.get(i),node);
+                   }
+               }
+               r.set(node,"declared",new FactType(node));
+            });
 
 
     }

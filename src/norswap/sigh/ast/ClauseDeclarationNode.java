@@ -19,9 +19,7 @@ public class ClauseDeclarationNode extends DeclarationNode {
 
 
     @Override
-    public String name () {
-        return name.toString();
-    }
+    public String name () {     return name.name; }
     @Override
     public String declaredThing () {
         return "rule";

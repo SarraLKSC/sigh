@@ -144,6 +144,9 @@ public class GrammarTests extends AutumnTestFixture {
     @Test public void testDeclarations() {
         rule = grammar.statement;
 
+     //   successExpect("var X: Term = like", new VarDeclarationNode(null,
+       //     "X", new SimpleTypeNode(null, "Term"), new TermNode(null, "like")));
+
         successExpect("var X: Int = 1", new VarDeclarationNode(null,
             "X", new SimpleTypeNode(null, "Int"), intlit(1)));
 

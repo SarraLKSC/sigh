@@ -1,10 +1,13 @@
 package norswap.sigh.types;
 
-public class ClauseType extends Type{
+import norswap.sigh.ast.ClauseDeclarationNode;
 
+public class ClauseType extends Type{
+ public final ClauseDeclarationNode node;
+ public ClauseType ( ClauseDeclarationNode node) {this.node=node; }
 
     @Override
     public String name () {
-        return null;
+        return node.name.name();
     }
 }

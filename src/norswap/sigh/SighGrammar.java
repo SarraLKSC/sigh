@@ -120,7 +120,7 @@ public class SighGrammar extends Grammar
     // harry,louis,david,Riadh
    public rule terms = lazy(() ->
         this.term.sep(0,COMMA)
-            .as_list(ExpressionNode.class));
+            .as_list(TermNode.class));
 
     //-------------------------------------------------------------------//
     public rule reference =

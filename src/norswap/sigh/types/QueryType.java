@@ -1,9 +1,13 @@
 package norswap.sigh.types;
 
-public class QueryType extends  Type{
+import norswap.sigh.ast.QueryDeclarationNode;
 
+public class QueryType extends  Type{
+    public final QueryDeclarationNode node;
+
+    public QueryType(QueryDeclarationNode node){this.node=node;}
     @Override
     public String name () {
-        return null;
+        return node.name;
     }
 }
