@@ -49,10 +49,6 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
     }
 
     // ---------------------------------------------------------------------------------------------
-    @Test public void testLP(){
-        successInput("var X: Term = like");
-    }
-    // ---------------------------------------------------------------------------------------------
 
     @Test public void testLiteralsAndUnary() {
         successInput("return 42");
@@ -160,15 +156,24 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
     }
 
     // ---------------------------------------------------------------------------------------------
+    // LP Semantic tests !
+
     @Test void testFact(){
-        successInput("LP sing ( harry )");
-        successInput("LP song (Style,taylorSwift)");
-        successInput("LP feat( drake,rihanna, takecare )");
+        successInput("LP sing ( #harry )");
+        successInput("LP song (#Style,#taylorSwift)");
+        successInput("LP feat( #drake,#rihanna, #takecare )");
+
+        failureInputWith("LP session( august )","Could not resolve: august");
+        failureInputWith("var X: String= \"term\"; LP sing( X ) ", "non term type found where term type required ! String");
     }
     @Test public void testVarDecl() {
+
+        successInput("var X: Term = #like; return X");
+        successInput("var X: Term = #lilia; LP sing( X )  ");
+
+        //--------------------------------------------------------------------
         successInput("var x: Int = 1; return x");
         successInput("var x: Float = 2.0; return x");
-        successInput("var X: Term = \'like\'");
         successInput("var x: Int = 0; return x = 3");
         successInput("var x: String = \"tru\"; return x = \"S\"");
 

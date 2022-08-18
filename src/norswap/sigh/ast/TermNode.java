@@ -15,7 +15,7 @@ public class TermNode extends ExpressionNode {
         this.value = Util.cast(value, String.class);
        // System.out.println("yo inside term constructor: "+name);
     }
-
+    public String value(){return value;}
     @Override
     public String contents () {
         return value;

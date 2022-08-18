@@ -24,7 +24,7 @@ public class GrammarTests extends AutumnTestFixture {
 
     // ---------------------------------------------------------------------------------------------
 
-    // LP grammar test addition
+    // LP grammar test method addition: testLP - testFact - testClause - testQuery + additional tests in testDeclarations !
 
     @Test void testLP () {
         rule=grammar.expression;
@@ -33,43 +33,46 @@ public class GrammarTests extends AutumnTestFixture {
     }
     @Test void testFact(){
         rule=grammar.statement;
-        successExpect("LP sing ( harry )",new FactDeclarationNode(null,"sing",asList(
-            new TermNode(null,"harry"))
+        successExpect("LP sing ( #harry )",new FactDeclarationNode(null,"sing",asList(
+            new TermNode(null,"#harry"))
         ));
-        successExpect("LP song (Style,taylorSwift)", new FactDeclarationNode(null,"song", asList(
-            new TermNode(null,"Style"),
-            new TermNode(null,"taylorSwift")
+        successExpect("LP sing ( x )",new FactDeclarationNode(null,"sing",asList(
+            new ReferenceNode(null,"x"))
+        ));
+        successExpect("LP song (#Style,#taylorSwift)", new FactDeclarationNode(null,"song", asList(
+            new TermNode(null,"#Style"),
+            new TermNode(null,"#taylorSwift")
         )));
-        successExpect("LP feat( drake,rihanna, takecare )", new FactDeclarationNode(null,"feat",asList(
-            new TermNode(null,"drake"),
-            new TermNode(null,"rihanna"),
-            new TermNode(null,"takecare")
+        successExpect("LP feat( #drake,#rihanna, #takecare )", new FactDeclarationNode(null,"feat",asList(
+            new TermNode(null,"#drake"),
+            new TermNode(null,"#rihanna"),
+            new TermNode(null,"#takecare")
         )));
     }
     @Test void testClause(){
 
         rule=grammar.statement;
-        successExpect("LPC animal(a) :- dog(a) ", new ClauseDeclarationNode(null,
-            new AtomNode(null,"animal",asList(new TermNode(null,"a"))), asList(
-                new AtomNode(null,"dog",asList(new TermNode(null,"a")))
+        successExpect("LPC animal(#a) :- dog(#a) ", new ClauseDeclarationNode(null,
+            new AtomNode(null,"animal",asList(new TermNode(null,"#a"))), asList(
+                new AtomNode(null,"dog",asList(new TermNode(null,"#a")))
             )));
 
-        successExpect("LPC sister(a,b) :- mom(a,c) , mom(b,c)", new ClauseDeclarationNode(null,
-            new AtomNode(null,"sister",asList(new TermNode(null,"a"),new TermNode(null,"b"))),
+        successExpect("LPC sister(#a,#b) :- mom(#a,#c) , mom(#b,#c)", new ClauseDeclarationNode(null,
+            new AtomNode(null,"sister",asList(new TermNode(null,"#a"),new TermNode(null,"#b"))),
             asList(
-            new AtomNode(null,"mom",asList(new TermNode(null,"a"), new TermNode(null,"c"))),
-            new AtomNode(null,"mom",asList(new TermNode(null,"b"), new TermNode(null,"c")))
+            new AtomNode(null,"mom",asList(new TermNode(null,"#a"), new TermNode(null,"#c"))),
+            new AtomNode(null,"mom",asList(new TermNode(null,"#b"), new TermNode(null,"#c")))
         )));
     }
 
     @Test void testQuery(){
         rule= grammar.statement;
-        successExpect("-? boy( baby )", new QueryDeclarationNode(null,"boy",asList(
-            new TermNode(null,"baby")
+        successExpect("-? boy( #baby )", new QueryDeclarationNode(null,"boy",asList(
+            new TermNode(null,"#baby")
         )));
-        successExpect("-? mother( lilly, harry)", new QueryDeclarationNode(null, "mother", asList(
-            new TermNode(null,"lilly"),
-            new TermNode(null,"harry")
+        successExpect("-? mother( #lilly, #harry)", new QueryDeclarationNode(null, "mother", asList(
+            new TermNode(null,"#lilly"),
+            new TermNode(null,"#harry")
         )));
     }
 
@@ -143,10 +146,11 @@ public class GrammarTests extends AutumnTestFixture {
 
     @Test public void testDeclarations() {
         rule = grammar.statement;
+        // additional test for Term declaration !
+        successExpect("var X: Term = #like", new VarDeclarationNode(null,
+            "X", new SimpleTypeNode(null, "Term"), new TermNode(null, "#like")));
 
-     //   successExpect("var X: Term = like", new VarDeclarationNode(null,
-       //     "X", new SimpleTypeNode(null, "Term"), new TermNode(null, "like")));
-
+        //------------------------------------------------------------------------------------------
         successExpect("var X: Int = 1", new VarDeclarationNode(null,
             "X", new SimpleTypeNode(null, "Int"), intlit(1)));
 

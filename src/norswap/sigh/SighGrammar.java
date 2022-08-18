@@ -59,7 +59,7 @@ public class SighGrammar extends Grammar
     public rule COMMA           = word(",");
 
     // LP lexical additions
-
+    public rule HASHTAG         = word("#");
     public rule QUERY           = word("-?");
     public rule NECK_OP         = word(":-");
     public rule LOGIC_P         = word("LP");
@@ -115,13 +115,21 @@ public class SighGrammar extends Grammar
     // ==== SYNTACTIC =========================================================
 
     // harry
-    public rule term = identifier
-        .push($-> new TermNode($.span(),$.$[0]));
+    public rule term = identifier(seq(HASHTAG,id_part.at_least(0)))
+        .push($-> new TermNode($.span(),$.str()));
     // harry,louis,david,Riadh
    public rule terms = lazy(() ->
         this.term.sep(0,COMMA)
             .as_list(TermNode.class));
 
+   ///////////////////////
+    public rule varLP= identifier
+       .push($->new ReferenceNode($.span(),$.str()));
+   public rule idNterm= choice(term,varLP);
+    public rule idNterms = lazy(() ->
+        this.idNterm.sep(0,COMMA)
+            .as_list(ExpressionNode.class));
+    /////////////////////
     //-------------------------------------------------------------------//
     public rule reference =
         identifier
@@ -151,7 +159,7 @@ public class SighGrammar extends Grammar
 
     // an atom is a predicate symbol with the right number of terms ex song(22, taylor swift)
     public rule atom =
-        seq(identifier,LPAREN,terms,RPAREN)
+        seq(identifier,LPAREN,idNterms,RPAREN)
             .push($->new AtomNode($.span(),$.$[0],$.$[1]));
 
     //atoms ->   song(22,taylor swift),singer(taylor swift), project(data science)
@@ -166,11 +174,11 @@ public class SighGrammar extends Grammar
             .push($-> new ClauseDeclarationNode($.span(),$.$[0],$.$[1]));
 
     // in our language we expect a fact as LP id ( term1, term2)
-    public rule fact = seq(LOGIC_P,identifier,LPAREN,terms,RPAREN)
+    public rule fact = seq(LOGIC_P,identifier,LPAREN,idNterms,RPAREN)
         .push($-> new FactDeclarationNode($.span(),$.$[0],$.$[1]));
 
     //in our language we expect LP -? open(saturday)
-    public rule query = seq(QUERY,identifier,LPAREN,terms,RPAREN)
+    public rule query = seq(QUERY,identifier,LPAREN,idNterms,RPAREN)
         .push($-> new QueryDeclarationNode($.span(),$.$[0],$.$[1]));
 
 

@@ -810,18 +810,21 @@ public final class SemanticAnalysis
         R.set(node,"scope",scope);
 
         Attribute[] dependencies = new Attribute[node.terms.size()];
-        forEachIndexed(node.terms,(i,term)->
-            dependencies[i]= term.attr("type"));
-
+     //   System.out.println("checkpoint: size of terms= "+node.terms.size());
+        forEachIndexed(node.terms,(i,term)->{
+          //      System.out.println("checkpoint: i ="+i+"  att= "+term.attr("type"));
+            dependencies[i]= term.attr("type");});
+       // System.out.println(" GET HERE");
         R.rule()
             .using(dependencies)
             .by(r->{
+             //   System.out.println("IN HERE");
                for(int i=0; i< dependencies.length; i++){
                    if(!(r.get(i) instanceof TermType)) {
-                       r.error("non term type found where term type required: "+r.get(i),node);
+                       r.error("non term type found where term type required ! "+ r.get(i).toString(),node);
                    }
                }
-               r.set(node,"declared",new FactType(node));
+            //  r.set(node,"declared",new FactType(node));
             });
 
 
