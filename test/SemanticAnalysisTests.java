@@ -2,9 +2,7 @@ import norswap.autumn.AutumnTestFixture;
 import norswap.autumn.positions.LineMapString;
 import norswap.sigh.SemanticAnalysis;
 import norswap.sigh.SighGrammar;
-import norswap.sigh.ast.FactDeclarationNode;
-import norswap.sigh.ast.SighNode;
-import norswap.sigh.ast.TermNode;
+import norswap.sigh.ast.*;
 import norswap.uranium.Reactor;
 import norswap.uranium.UraniumTestFixture;
 import norswap.utils.visitors.Walker;
@@ -164,8 +162,34 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
         successInput("LP feat( #drake,#rihanna, #takecare )");
 
         failureInputWith("LP session( august )","Could not resolve: august");
-        failureInputWith("var X: String= \"term\"; LP sing( X ) ", "non term type found where term type required ! String");
+        failureInputWith("var X: String= \"term\"; LP sing( X ) ", "non term type found where term type required instead of String");
     }
+
+    @Test void testQuery(){
+        successInput("-? boy( #baby )");
+        successInput("-? mother( #lilly, #harry)");
+        successInput("var X: Term= #param; -? query( X )");
+
+        failureInputWith(" -? present(student)","Could not resolve: student");
+        failureInputWith("var X: String= \"student\"; -? present(X) ", "non term type found where term type required instead of String");
+    }
+
+    @Test void  testClause(){
+
+        successInput("LPC animal(#a) :- dog(#a) ");
+
+        successInput("LPC sister(#a,#b) :- mom(#a,#c) , mom(#b,#c)");
+
+        successInput("var X :Term = #a; LPC animal(X) :- dog(X)");
+
+        successInput("var X:Term = #a; var Y:Term = #b; LPC sibling(X,Y) :- mother(#a,X), mother(#a,Y)");
+
+        failureInputWith("LPC animal(  puppy) :- dog( puppy)","Could not resolve: puppy");
+        failureInputWith("var X :Int = 1; LPC animal(X) :- dog(X)","non term type found where term type required instead of Int");
+
+
+    }
+
     @Test public void testVarDecl() {
 
         successInput("var X: Term = #like; return X");

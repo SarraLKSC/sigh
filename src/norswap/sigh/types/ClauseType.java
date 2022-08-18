@@ -8,6 +8,6 @@ public class ClauseType extends Type{
 
     @Override
     public String name () {
-        return node.name.name();
+        return node.left_atom.name();
     }
 }

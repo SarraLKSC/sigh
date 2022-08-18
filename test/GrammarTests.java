@@ -75,8 +75,6 @@ public class GrammarTests extends AutumnTestFixture {
             new TermNode(null,"#harry")
         )));
     }
-
-
     //----------------------------------------------------------------------------------------//
 
     @Test

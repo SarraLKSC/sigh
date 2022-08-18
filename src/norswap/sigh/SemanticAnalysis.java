@@ -141,6 +141,7 @@ public final class SemanticAnalysis
         walker.register(FactDeclarationNode.class,      PRE_VISIT,  analysis::factDecl);
         walker.register(ClauseDeclarationNode.class,    PRE_VISIT,  analysis::clauseDecl);
         walker.register(FactCallNode.class,             PRE_VISIT,  analysis::factCall);
+        walker.register(AtomNode.class,                 PRE_VISIT,  node -> {});
 
         walker.register(TermNode.class,                 PRE_VISIT,  analysis::termLiteral);
         //
@@ -771,9 +772,35 @@ public final class SemanticAnalysis
     // ---------------------------------------------------------------------------------------------
 
     private void clauseDecl(ClauseDeclarationNode node){
-        scope.declare(node.name.name,node);
+        scope.declare(node.left_atom.name,node);
         scope= new Scope(node,scope);
         R.set(node,"scope",scope);
+        int cpt=node.left_atom.terms.size();
+
+        for(int i=0;i<node.right_atoms.size();i++){ cpt+= node.right_atoms.get(i).terms.size();}
+
+        Attribute[] dependencies = new Attribute[cpt];
+        forEachIndexed(node.left_atom.terms,(i,term)->
+            dependencies[i]= term.attr("type"));
+        cpt=node.left_atom.terms.size();
+
+        for(int i=0;i<node.right_atoms.size();i++){
+           for(int j=0;j<node.right_atoms.get(i).terms.size();j++){
+               dependencies[cpt+j]= node.right_atoms.get(i).terms.get(j).attr("type");
+           }
+           cpt+=node.right_atoms.get(i).terms.size();
+        }
+
+        R.rule()
+            .using(dependencies)
+            .by(r->{
+                for(int i=0; i< dependencies.length; i++){
+                    if(!(r.get(i) instanceof TermType)) {
+                        r.error("non term type found where term type required instead of "+ r.get(i).toString(),node);
+                    }
+                }
+                //    r.set(node,"declared",new QueryType(node));
+            });
 
 
 
@@ -794,10 +821,10 @@ public final class SemanticAnalysis
             .by(r->{
                 for(int i=0; i< dependencies.length; i++){
                     if(!(r.get(i) instanceof TermType)) {
-                        r.error("non term type found where term type required: "+r.get(i),node);
+                        r.error("non term type found where term type required instead of "+ r.get(i).toString(),node);
                     }
                 }
-                r.set(node,"declared",new QueryType(node));
+            //    r.set(node,"declared",new QueryType(node));
             });
 
 
@@ -821,10 +848,10 @@ public final class SemanticAnalysis
              //   System.out.println("IN HERE");
                for(int i=0; i< dependencies.length; i++){
                    if(!(r.get(i) instanceof TermType)) {
-                       r.error("non term type found where term type required ! "+ r.get(i).toString(),node);
+                       r.error("non term type found where term type required instead of "+ r.get(i).toString(),node);
                    }
                }
-            //  r.set(node,"declared",new FactType(node));
+            //  r.set(0,new FactType(node));
             });
 
 
