@@ -140,8 +140,8 @@ public final class SemanticAnalysis
         walker.register(QueryDeclarationNode.class,     PRE_VISIT,  analysis::queryDecl);
         walker.register(FactDeclarationNode.class,      PRE_VISIT,  analysis::factDecl);
         walker.register(ClauseDeclarationNode.class,    PRE_VISIT,  analysis::clauseDecl);
-        walker.register(FactCallNode.class,             PRE_VISIT,  analysis::factCall);
-        walker.register(AtomNode.class,                 PRE_VISIT,  node -> {});
+      // walker.register(AtomNode.class,                 PRE_VISIT,  analysis::factCall);
+        walker.register(AtomNode.class,                 PRE_VISIT,  analysis::atomTmp);
 
         walker.register(TermNode.class,                 PRE_VISIT,  analysis::termLiteral);
         //
@@ -180,6 +180,7 @@ public final class SemanticAnalysis
 
     private void stringLiteral (StringLiteralNode node) {
         R.set(node, "type", StringType.INSTANCE);
+        R.set(node, "name", node.value);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -187,6 +188,7 @@ public final class SemanticAnalysis
     private void termLiteral (TermNode node){
 
         R.set(node, "type", TermType.INSTANCE);
+        R.set(node, "name", node.value);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -203,6 +205,7 @@ public final class SemanticAnalysis
         if (maybeCtx != null) {
             R.set(node, "decl",  maybeCtx.declaration);
             R.set(node, "scope", maybeCtx.scope);
+            R.set(node, "name", node.name);
 
             R.rule(node, "type")
             .using(maybeCtx.declaration, "type")
@@ -771,6 +774,11 @@ public final class SemanticAnalysis
                 // LOGIC PROGRAMMING
     // ---------------------------------------------------------------------------------------------
 
+    private void atomTmp(AtomNode node){
+
+    }
+    // ---------------------------------------------------------------------------------------------
+
     private void clauseDecl(ClauseDeclarationNode node){
         scope.declare(node.left_atom.name,node);
         scope= new Scope(node,scope);
@@ -780,17 +788,22 @@ public final class SemanticAnalysis
         for(int i=0;i<node.right_atoms.size();i++){ cpt+= node.right_atoms.get(i).terms.size();}
 
         Attribute[] dependencies = new Attribute[cpt];
-        forEachIndexed(node.left_atom.terms,(i,term)->
-            dependencies[i]= term.attr("type"));
+        Attribute[] dependecies_= new Attribute[cpt];
+
+        forEachIndexed(node.left_atom.terms,(i,term)-> {
+            dependencies[i]= term.attr("type");
+         //   dependecies_[i]= term.attr("name");
+                });
         cpt=node.left_atom.terms.size();
 
         for(int i=0;i<node.right_atoms.size();i++){
            for(int j=0;j<node.right_atoms.get(i).terms.size();j++){
                dependencies[cpt+j]= node.right_atoms.get(i).terms.get(j).attr("type");
+            //   dependecies_[cpt+j]= node.right_atoms.get(i).terms.get(j).attr("name");
+
            }
            cpt+=node.right_atoms.get(i).terms.size();
         }
-
         R.rule()
             .using(dependencies)
             .by(r->{
@@ -801,20 +814,33 @@ public final class SemanticAnalysis
                 }
                 //    r.set(node,"declared",new QueryType(node));
             });
-
+/**
+        R.rule()
+            .using(dependecies_)
+            .by(r->{
+                for(int i=0; i<node.left_atom.terms.size();i++){
+                    boolean exist=false;
+                    for(int j=node.left_atom.terms.size(); j<dependecies_.length;j++){
+                        if (dependecies_[i]== dependecies_[j]) exist=true;
+                    }
+                    if(!exist) r.error("clause term not part of right part "+dependecies_[i],node);
+                }
+            });**/
 
 
     }
     // ---------------------------------------------------------------------------------------------
 
     private void queryDecl(QueryDeclarationNode node){
-        scope.declare(node.name,node);
+        scope.declare(node.name(),node);
         scope= new Scope(node,scope);
         R.set(node,"scope",scope);
 
-        Attribute[] dependencies = new Attribute[node.terms.size()];
-        forEachIndexed(node.terms,(i,term)->
-            dependencies[i]= term.attr("type"));
+        Attribute[] dependencies = new Attribute[node.atom.terms.size()];
+        forEachIndexed(node.atom.terms,(i,term)->{
+            dependencies[i]= term.attr("type");
+         //   System.out.println(term.attr("name"));
+        });
 
         R.rule()
             .using(dependencies)
@@ -824,8 +850,16 @@ public final class SemanticAnalysis
                         r.error("non term type found where term type required instead of "+ r.get(i).toString(),node);
                     }
                 }
-            //    r.set(node,"declared",new QueryType(node));
             });
+        /**
+        R.rule()
+            .using(node.name,"type")
+            .by(r -> {
+                Type type = r.get(0);
+                if (!(type instanceof FactType)){
+                    r.error(" query with a non fact ",node);
+                }
+            });**/
 
 
     }
@@ -839,7 +873,7 @@ public final class SemanticAnalysis
         Attribute[] dependencies = new Attribute[node.terms.size()];
      //   System.out.println("checkpoint: size of terms= "+node.terms.size());
         forEachIndexed(node.terms,(i,term)->{
-          //      System.out.println("checkpoint: i ="+i+"  att= "+term.attr("type"));
+       //  System.out.println("checkpoint: i ="+i+"  att= "+term.attr("name"));
             dependencies[i]= term.attr("type");});
        // System.out.println(" GET HERE");
         R.rule()
@@ -851,16 +885,38 @@ public final class SemanticAnalysis
                        r.error("non term type found where term type required instead of "+ r.get(i).toString(),node);
                    }
                }
-            //  r.set(0,new FactType(node));
             });
-
+        R.set(node,"declared",new FactType(node));
 
     }
 
     // ---------------------------------------------------------------------------------------------
 
-    private void factCall(FactCallNode node){
+    private void factCall(AtomNode node){
+        this.inferenceContext=node;
+        Attribute[] dependencies = new Attribute[node.terms.size()+1];
+      //  dependencies[0]=node.fact.attr("type");
+        forEachIndexed(node.terms,(i,term)->{
+            dependencies[i]= term.attr("type");
+            R.set(term,"index",i);
+        });
 
+        R.rule(node,"type")
+            .using(dependencies)
+            .by(r->{
+                Type maybeFactType = r.get(0);
+                if(!(maybeFactType instanceof FactType)){
+                    r.error("Query on non-fact type"+node.name,node);
+                    return;
+                }
+                FactType factType= cast(maybeFactType);
+                List<ExpressionNode> param= factType.node.terms;
+                List<ExpressionNode> args = node.terms;
+
+                if(param.size() != args.size()){
+                    r.error(" fact called with wrong arity of terms",node);
+                }
+            });
 
     }
 
@@ -902,6 +958,7 @@ public final class SemanticAnalysis
             for (int i = 0; i < paramTypes.length; ++i)
                 paramTypes[i] = r.get(i + 1);
             r.set(0, new FunType(r.get(0), paramTypes));
+
         });
 
         R.rule()

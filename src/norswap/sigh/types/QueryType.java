@@ -8,6 +8,6 @@ public class QueryType extends  Type{
     public QueryType(QueryDeclarationNode node){this.node=node;}
     @Override
     public String name () {
-        return node.name;
+        return node.atom.name;
     }
 }

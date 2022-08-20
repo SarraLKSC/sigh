@@ -158,6 +158,7 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
 
     @Test void testFact(){
         successInput("LP sing ( #harry )");
+        successInput("LP sing ( #harry ); LP sing(#niall)");
         successInput("LP song (#Style,#taylorSwift)");
         successInput("LP feat( #drake,#rihanna, #takecare )");
 
@@ -166,7 +167,9 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
     }
 
     @Test void testQuery(){
+        successInput("LP boy(#smtg); -? boy( #baby )");
         successInput("-? boy( #baby )");
+
         successInput("-? mother( #lilly, #harry)");
         successInput("var X: Term= #param; -? query( X )");
 

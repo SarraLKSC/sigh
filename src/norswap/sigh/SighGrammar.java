@@ -10,7 +10,7 @@ import static norswap.sigh.ast.UnaryOperator.NOT;
 //      - include PROLOG syntax:
 //          for a fact   song( 22, 'Taylor Swift')
 //          for a query   ?-singer(Laylow)
-//          for a rule   feat(x,,y):- singer(x), singer(y), song(z,x), song(z,y)
+//          for a clause   feat(x,y):- singer(x), singer(y), song(z,x), song(z,y)
 //      - create needed tests
 public class SighGrammar extends Grammar
 {
@@ -114,10 +114,10 @@ public class SighGrammar extends Grammar
 
     // ==== SYNTACTIC =========================================================
 
-    // harry
-    public rule term = identifier(seq(HASHTAG,id_part.at_least(0)))
+    // #harry
+    public rule term = seq(HASHTAG,identifier)
         .push($-> new TermNode($.span(),$.str()));
-    // harry,louis,david,Riadh
+    // #harry,#louis,#david,#Riadh
    public rule terms = lazy(() ->
         this.term.sep(0,COMMA)
             .as_list(TermNode.class));
@@ -125,7 +125,8 @@ public class SighGrammar extends Grammar
    ///////////////////////
     public rule varLP= identifier
        .push($->new ReferenceNode($.span(),$.str()));
-   public rule idNterm= choice(term,varLP);
+
+   public rule idNterm= choice(term,varLP); //introduced so facts and clause and query take in #a term or x variable
     public rule idNterms = lazy(() ->
         this.idNterm.sep(0,COMMA)
             .as_list(ExpressionNode.class));
@@ -178,8 +179,8 @@ public class SighGrammar extends Grammar
         .push($-> new FactDeclarationNode($.span(),$.$[0],$.$[1]));
 
     //in our language we expect LP -? open(saturday)
-    public rule query = seq(QUERY,identifier,LPAREN,idNterms,RPAREN)
-        .push($-> new QueryDeclarationNode($.span(),$.$[0],$.$[1]));
+    public rule query = seq(QUERY,atom)
+        .push($-> new QueryDeclarationNode($.span(),$.$[0]));
 
 
     //------------------------------------------------------------//

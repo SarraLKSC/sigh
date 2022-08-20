@@ -5,11 +5,10 @@ import norswap.sigh.scopes.DeclarationKind;
 import norswap.sigh.scopes.RootScope;
 import norswap.sigh.scopes.Scope;
 import norswap.sigh.scopes.SyntheticDeclarationNode;
-// additional primitive type
-import norswap.sigh.types.TermType;
 import norswap.sigh.types.FloatType;
 import norswap.sigh.types.IntType;
 import norswap.sigh.types.StringType;
+import norswap.sigh.types.TermType;
 import norswap.sigh.types.Type;
 import norswap.uranium.Reactor;
 import norswap.utils.Util;
@@ -459,6 +458,8 @@ public final class Interpreter
             return ((FunDeclarationNode) arg).name;
         else if (arg instanceof StructDeclarationNode)
             return ((StructDeclarationNode) arg).name;
+        else if (arg instanceof TermNode)
+            return ((TermNode) arg).value;
         else if (arg instanceof Constructor)
             return "$" + ((Constructor) arg).declaration.name;
         else

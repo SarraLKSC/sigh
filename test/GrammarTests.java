@@ -67,13 +67,14 @@ public class GrammarTests extends AutumnTestFixture {
 
     @Test void testQuery(){
         rule= grammar.statement;
-        successExpect("-? boy( #baby )", new QueryDeclarationNode(null,"boy",asList(
-            new TermNode(null,"#baby")
-        )));
-        successExpect("-? mother( #lilly, #harry)", new QueryDeclarationNode(null, "mother", asList(
+        successExpect("-? boy( #baby )", new QueryDeclarationNode(null,new AtomNode(null,"boy", asList(
+            new TermNode(null,"#baby")))
+        ));
+        successExpect("-? mother( #lilly, #harry)", new QueryDeclarationNode(null, new AtomNode(null,"mother",
+            asList(
             new TermNode(null,"#lilly"),
             new TermNode(null,"#harry")
-        )));
+        ))));
     }
     //----------------------------------------------------------------------------------------//
 

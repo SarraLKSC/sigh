@@ -109,6 +109,16 @@ public final class InterpreterTests extends TestFixture {
     // ---------------------------------------------------------------------------------------------
 
     @Test
+    public void testLP(){
+        rule=grammar.root;
+        check("return #a","#a");
+        check("return #a; return #b","#a");
+        check("var X :Term = #a; return X","#a");
+        check("var x: Term = #a; return x= #b","#b");
+
+     //   successInput("var X:Term = #a; var Y:Term = #b; LPC sibling(X,Y) :- mother(#a,X), mother(#a,Y)");
+    }
+    @Test
     public void testLiteralsAndUnary () {
         checkExpr("42", 42L);
         checkExpr("42.0", 42.0d);

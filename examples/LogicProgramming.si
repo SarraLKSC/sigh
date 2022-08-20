@@ -1,0 +1,17 @@
+
+var x: Term = #a
+var z: Term= #d
+var y: Term= #c
+
+print(""+x)
+
+LP letter(x)
+LPC alphabet(x) :- letter(x)
+
+x= #b
+print(""+x)
+
+LP letter(y)
+LP letter(z)
+
+
