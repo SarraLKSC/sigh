@@ -6,6 +6,7 @@ import norswap.sigh.scopes.RootScope;
 import norswap.sigh.scopes.Scope;
 import norswap.sigh.scopes.SyntheticDeclarationNode;
 import norswap.sigh.types.*;
+import norswap.uranium.Attribute;
 import norswap.uranium.Reactor;
 import norswap.utils.Util;
 import norswap.utils.exceptions.Exceptions;
@@ -14,6 +15,7 @@ import norswap.utils.visitors.ValuedVisitor;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import static norswap.utils.Util.cast;
 import static norswap.utils.Vanilla.coIterate;
@@ -170,6 +172,12 @@ public final class Interpreter
         Type leftType  = reactor.get(node.left, "type");
         Type rightType = reactor.get(node.right, "type");
 
+        if (leftType instanceof GenericType)
+            leftType= checkNode(leftType,node.left);
+
+        if (rightType instanceof GenericType)
+            rightType= checkNode(rightType, node.right);
+
         // Cases where both operands should not be evaluated.
         switch (node.operator) {
             case OR:  return booleanOp(node, false);
@@ -180,14 +188,16 @@ public final class Interpreter
         Object right = get(node.right);
 
         if (node.operator == BinaryOperator.ADD
-                && (leftType instanceof StringType || rightType instanceof StringType))
+            && (leftType instanceof StringType || rightType instanceof StringType))
             return convertToString(left) + convertToString(right);
 
         boolean floating = leftType instanceof FloatType || rightType instanceof FloatType;
-        boolean numeric  = floating || leftType instanceof IntType;
+        boolean numeric  = floating || leftType instanceof IntType || rightType instanceof IntType;
 
-        if (numeric)
+
+        if (numeric) {
             return numericOp(node, floating, (Number) left, (Number) right);
+        }
 
         switch (node.operator) {
             case EQUALITY:
@@ -348,8 +358,11 @@ public final class Interpreter
     private Object root (RootNode node)
     {
         assert storage == null;
-        rootScope = reactor.get(node, "scope");
-        storage = rootStorage = new ScopeStorage(rootScope, null);
+
+        Object tempNode=this.reactor.getAll(node).findFirst().get().getValue();
+
+        rootScope= (RootScope) tempNode;
+       storage = rootStorage = new ScopeStorage(rootScope, null);
         storage.initRoot(rootScope);
 
         try {
@@ -404,8 +417,10 @@ public final class Interpreter
 
     private Object funCall (FunCallNode node)
     {
+
         Object decl = get(node.function);
-        Object[] args = map(node.arguments, new Object[0], this::run);
+        node.arguments.forEach(this::run);
+        Object[] args = map(node.arguments, new Object[0], visitor);
 
         if (decl == Null.INSTANCE)
             throw new PassthroughException(new NullPointerException("calling a null function"));
@@ -418,11 +433,15 @@ public final class Interpreter
 
         ScopeStorage oldStorage = storage;
         Scope scope = reactor.get(decl, "scope");
+
         storage = new ScopeStorage(scope, storage);
 
         FunDeclarationNode funDecl = (FunDeclarationNode) decl;
         coIterate(args, funDecl.parameters,
-                (arg, param) -> storage.set(scope, param.name, arg));
+            (arg, param) -> storage.set(scope, param.name, arg));
+        // the expected return type if the template parameter
+        if (node.expectedReturnType != null)
+            storage.set(scope, funDecl.genericParam.name, node.expectedReturnType);
 
         try {
             get(funDecl.block);
@@ -558,4 +577,38 @@ public final class Interpreter
     }
 
     // ---------------------------------------------------------------------------------------------
+
+    private Type checkNode(Type type, ExpressionNode node){
+        Type checkType;
+        ScopeStorage parent=this.storage.parent;
+
+        if (parent == null) {
+            checkType = type;
+        } else {
+            TypeNode nodeType = (TypeNode) parent.get(parent.scope, ((GenericType) type).node.name);
+            checkType = getTypeFromName(nodeType);
+
+        }
+        if (node instanceof FunCallNode) {
+            FunCallNode n = ((FunCallNode)node);
+            Scope scope = storage.scope;
+            DeclarationNode decl = scope.lookupLocal(n.function.contents());
+
+            TypeNode funcRet = ((FunDeclarationNode) decl).returnType;
+            if (funcRet instanceof SimpleTypeNode &&
+                ((SimpleTypeNode) funcRet).name.equals("T") ) {
+                String returnStr = ((SimpleTypeNode) funcRet).name;
+
+                if (n.expectedReturnType.contents().equals(returnStr)) {
+                    checkType = getTypeFromName(n.expectedReturnType);
+                } else {
+                    TypeNode typeNode = n.mapTtoType.get(returnStr);
+                    checkType = getTypeFromName(typeNode);
+                }
+            }
+        }
+        return checkType;
+    }
+    // ---------------------------------------------------------------------------------------------
+
 }

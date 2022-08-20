@@ -360,5 +360,141 @@ public final class InterpreterTests extends TestFixture {
 
     // ---------------------------------------------------------------------------------------------
 
-    // NOTE(norswap): Not incredibly complete, but should cover the basics.
+    @Test
+    public void testGenericOperations () {
+        rule=grammar.root;
+        /* Check the declaration */
+
+        check(
+            "template<T> checkDeclaration(x: T, y: T): Int { return x*y } ",
+            null
+        );
+
+
+        check(
+            "template<T> checkDeclaration (x: Int, y: Int): T { return x+y } ",
+            null
+        );
+
+
+        check(
+            "template<T> checkDeclaration (x: T, y: T): T { return x+y } ",
+            null
+        );
+
+        /* Error for Wrong type of Template Variable A */
+        checkThrows(
+            "template<A> add (x: Int, y: Int): Int { return x+y } ", AssertionError.class
+        );
+
+        /* Different argument from the return type expected */
+        checkThrows(
+            "template<T>  add (x: T, y: T): T { return x+y }; " +
+                "return add<String>(10, 2);",
+            AssertionError.class
+        );
+
+        checkThrows(
+            "template<T>  multiplyString (x: T, y: T): T { return a * b }; " +
+                "return multiplyString<String>(\"Hello\", \"Java\");",
+            AssertionError.class
+        );
+
+
+        /* Grammatical Errors as the definition not allow Two template parameters or arguments*/
+        checkThrows(
+            "template<T> add (x: T, y: Int): Int { return x+y }; " +
+                "return add<Int, Int>(1, 1);",
+            AssertionError.class
+        );
+
+        checkThrows(
+            "template<T,T> add (x: T, y: Int): Int { return x+y }; " +
+                "return add<Int>(1, 1);",AssertionError.class
+        );
+
+
+
+
+        /* checking the Sum for int type actual parameters */
+        check(
+            "template<T> intSum(x: T, y: T): T { return x+y };" +
+                "return intSum<Int>(25, 30)",
+            55L
+        );
+
+        check(
+            "template<T> intSum (x: T, y: T): T { return x+y };" +
+                "return intSum<Int>(55, 9)",
+            64L
+        );
+
+        check(
+            "template<T> intMult (x: T, y: T): T { return x*y };" +
+                "return intMult<Int>(5, 4)",
+            20L
+        );
+
+        /* checking the Sum for float type actual parameters */
+        check(
+            "template<T> floatSum (x: T): T { return x+x };" +
+                "return floatSum<Float>(25.0)",
+            50.0
+        );
+
+
+        /* + is supported by the string*/
+        check(
+            "template<T>  concatS(str: T, str2: T): T { return str+str2 };" +
+                "return concatS<String>(\"Check\", \"String\")",
+            "CheckString"
+        );
+
+        checkThrows(
+            "template<T>  concatS(str: T, str2: T): T { return  str+str2 };" +
+                "return concatS<String>(\"Check\", \"String\",\"Java\")",
+            AssertionError.class
+        );
+
+        // Float
+        check(
+            "template<T> floatSum (x: T, y: T): T { return x+y };" +
+                "return floatSum<Float>(1.0, 1.0)",
+            2.0
+        );
+
+        check(
+            "template<T> floatMult (x: T, y: T): T { return x*y };" +
+                "return floatMult<Float>(12.0, 6.0)",
+            72.0
+        );
+
+        check(
+            "template<T> first (x: T, y: T): T { return x*y };" +
+                "template<T> second (x: T, y: T): T { return x+y};"+
+                "template<T> third (x: T, y: T): T { return x*y };" ,
+            null
+        );
+
+        /* Generic inside a function Call*/
+        check(
+            "fun scopeTesting() {" +
+                "template<T> first (x: T, y: T): T { return x+y };" +
+                "template<T> second (x: T, y: T): T { return x*y};" +
+                "}",
+            null
+        );
+
+
+        check(
+            "template<T> first (x: T, y: T): T { return x+y };" +
+                "template<T> second (x: T, y: T): T { return x-y};" +
+                "template<T> third (x: T, y: T): T { return x*y};" +
+                "return first<Int>(6, 1) + second<Int>(3, 1) * third<Int>(4,8)",
+            71L
+        );
+
+
+    }
+
 }
