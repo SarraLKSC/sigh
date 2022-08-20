@@ -79,6 +79,8 @@ public class SighGrammar extends Grammar
     public rule _else           = reserved("else");
     public rule _while          = reserved("while");
     public rule _return         = reserved("return");
+    /* adding for the generics*/
+    public rule _temp           = reserved("template");
 
     public rule number =
         seq(opt('-'), choice('0', digit.at_least(1)));
@@ -193,8 +195,11 @@ public class SighGrammar extends Grammar
         paren_expression,
         array,term);
 
-    public rule function_args =
-        seq(LPAREN, expressions, RPAREN);
+    /*added for generics C++ templates */
+
+    public rule optional_arguments = seq(LANGLE, simple_type, RANGLE);
+
+    public rule function_args = seq(opt(optional_arguments), LPAREN, expressions, RPAREN);
 
     public rule suffix_expression = left_expression()
         .left(basic_expression)
@@ -202,8 +207,10 @@ public class SighGrammar extends Grammar
             $ -> new FieldAccessNode($.span(), $.$[0], $.$[1]))
         .suffix(seq(LSQUARE, lazy(() -> this.expression), RSQUARE),
             $ -> new ArrayAccessNode($.span(), $.$[0], $.$[1]))
-        .suffix(function_args,
-            $ -> new FunCallNode($.span(), $.$[0], $.$[1]));
+        .suffix(function_args,   /* only two arguments for the normal function node and additional is added for generics */
+            $ -> ($.$.length == 2) ? new FunCallNode($.span(), $.$[0], $.$[1]) : new FunCallNode($.span(), $.$[1], $.$[0], $.$[2]) );
+
+    /*added for generics C++ templates */
 
     public rule prefix_expression = right_expression()
         .operand(suffix_expression)
@@ -314,9 +321,16 @@ public class SighGrammar extends Grammar
     public rule maybe_return_type =
         seq(COLON, type).or_push_null();
 
-    public rule fun_decl =
-        seq(_fun, identifier, LPAREN, parameters, RPAREN, maybe_return_type, block)
-        .push($ -> new FunDeclarationNode($.span(), $.$[0], $.$[1], $.$[2], $.$[3]));
+    /*added for generics C++ templates */
+
+    public rule generic_del = seq(identifier).push($ -> new GenericDeclarationNode($.span(), $.$[0]));
+
+    public rule fun_decl = seq(seq(_temp, LANGLE, generic_del, RANGLE).opt(),
+        _fun.opt(), identifier, LPAREN, parameters, RPAREN, maybe_return_type, block)
+        .push($ -> $.$.length == 4 ? new FunDeclarationNode($.span(), $.$[0], $.$[1], $.$[2], $.$[3])
+            : new FunDeclarationNode($.span(), $.$[0], $.$[1], $.$[2], $.$[3], $.$[4])); // added optional first argument for the generic type
+
+    /*added for generics C++ templates */
 
     public rule field_decl =
         seq(_var, identifier, COLON, type)

@@ -3,6 +3,8 @@ import norswap.sigh.SighGrammar;
 import norswap.sigh.ast.*;
 import org.testng.annotations.Test;
 
+import java.util.Collections;
+
 import static java.util.Arrays.asList;
 import static norswap.sigh.ast.BinaryOperator.*;
 
@@ -21,6 +23,11 @@ public class GrammarTests extends AutumnTestFixture {
     private static FloatLiteralNode floatlit (double d) {
         return new FloatLiteralNode(null, d);
     }
+
+    private static StringLiteralNode stringlit (String s) {
+        return new StringLiteralNode(null, s);
+    }
+
 
     // ---------------------------------------------------------------------------------------------
 
@@ -193,6 +200,57 @@ public class GrammarTests extends AutumnTestFixture {
         successExpect("while 1 < 2 { return } ", new WhileNode(null,
             new BinaryExpressionNode(null, intlit(1), LOWER, intlit(2)),
             new BlockNode(null, asList(new ReturnNode(null, null)))));
+    }
+
+    @Test public void testGenerics() {
+        rule = grammar.fun_decl;
+
+        successExpect("template<T> testFloat(x:Float):Float { return x }", new FunDeclarationNode(
+                null, new GenericDeclarationNode(null, "T"),
+                "testFloat",
+                Collections.singletonList(new ParameterNode(null, "x", new SimpleTypeNode(null, "Float"))),
+                new SimpleTypeNode(null, "Float"),
+                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "x"))))
+            )
+        );
+
+        successExpect("template<T> testString(str:T):String { return str}", new FunDeclarationNode(
+                null, new GenericDeclarationNode(null, "T"),
+                "testString",
+                Collections.singletonList(new ParameterNode(null, "str", new SimpleTypeNode(null, "T"))),
+                new SimpleTypeNode(null, "String"),
+                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "str"))))
+            )
+        );
+
+        successExpect("template<T>  testTemplate(x:T):T { return x }", new FunDeclarationNode(
+                null,  new GenericDeclarationNode(null, "T"),
+                "testTemplate",
+                Collections.singletonList(new ParameterNode(null, "x",
+                    new SimpleTypeNode(null, "T"))), new SimpleTypeNode(null, "T"),
+                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "x"))))
+            )
+        );
+
+        rule = grammar.suffix_expression;
+
+        successExpect("genericInt<Int>(11, 10)",
+            new FunCallNode(null,
+                new SimpleTypeNode(null, "Int"),
+                new ReferenceNode(null, "genericInt"),
+                asList(intlit(11), intlit(10))));
+
+        successExpect("genericFloat<Float>(12.0, 22.0)",
+            new FunCallNode(null,
+                new SimpleTypeNode(null, "Float"),
+                new ReferenceNode(null, "genericFloat"),
+                asList(floatlit(12), floatlit(22))));
+
+        successExpect("genericString<String>(\"Hello\", \"Java\")",
+            new FunCallNode(null,
+                new SimpleTypeNode(null, "String"),
+                new ReferenceNode(null, "genericString"),
+                asList(stringlit("Hello"), stringlit("Java"))));
     }
 
     // ---------------------------------------------------------------------------------------------
