@@ -5,12 +5,7 @@ import norswap.sigh.scopes.DeclarationKind;
 import norswap.sigh.scopes.RootScope;
 import norswap.sigh.scopes.Scope;
 import norswap.sigh.scopes.SyntheticDeclarationNode;
-import norswap.sigh.types.FloatType;
-import norswap.sigh.types.IntType;
-import norswap.sigh.types.StringType;
-import norswap.sigh.types.FactType;
-import norswap.sigh.types.TermType;
-import norswap.sigh.types.Type;
+import norswap.sigh.types.*;
 import norswap.uranium.Reactor;
 import norswap.utils.Util;
 import norswap.utils.exceptions.Exceptions;
@@ -539,6 +534,27 @@ public final class Interpreter
         if (value instanceof Long && targetType instanceof FloatType)
             value = ((Long) value).doubleValue();
         storage.set(scope, name, value);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    public static Type getTypeFromName(TypeNode type) {
+        if (type instanceof SimpleTypeNode) {
+            switch (((SimpleTypeNode) type).name) {
+                case "Int": {
+                    return IntType.INSTANCE;
+                }
+                case "Float": {
+                    return FloatType.INSTANCE;
+                }
+                case "String": {
+                    return StringType.INSTANCE;
+                }
+            }
+        } else{
+            throw new Error("The node should be Simple Type Node");
+        }
+        throw new Error("The return should be Integer, Float or String ");
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -345,4 +345,69 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
     }
 
     // ---------------------------------------------------------------------------------------------
+
+    @Test public void testGenericOperations() {
+
+        /* Float Operations*/
+
+        successInput(
+            "template<T> floatSum (x: T, y: T): T { return x + y } " +
+                "return floatSum<Float>(11.0, 12.0)"
+        );
+
+        successInput(
+            "template<T> floatMult (x: T, y: T): T { return x * y } " +
+                "return floatMult<Float>(13.0, 12.0)"
+        );
+
+        /* Integer Operations*/
+
+        successInput(
+            "template<T> intSum (x: T, y: T): T { return x + y } " +
+                "return intSum<Int>(22, 12)"
+        );
+
+        successInput(
+            "template<T> intMult (x: T, y: T): T { return x * y } " +
+                "return intMult<Int>(22, 12)"
+        );
+
+        /* String Operations*/
+        successInput(
+            "template<T> stringConcat (x: T, y: T): T { return x + y } " +
+                "return stringConcat<String>(\"Hello\", \"Java\")"
+        );
+
+        /* Testing the Failure Scenarios */
+
+        failureInputWith(
+            "template<T>  failStringOperation (a: T, b: T): T { return a * b } return failStringOperation<String>(\"Hello\", \"Java\")",
+            "Cannot used multiply operation in strings");
+
+
+        failureInputWith(
+            "template<A>  definitionError(x: T, y: T): T { return x * y } ",
+            "could not resolve: T","T should be used as Template Parameter instead of A");
+
+        failureInputWith(
+            "template<T>  testErr(x: T, y: T): T { return x - y } " +
+                "return testErr<Int>(2)",
+            "wrong number of arguments, expected 2 but got 1");
+
+
+        failureInputWith(
+            "template<T>  argTypeError(x: T, y: T): T { return x + y } " +
+                "return argTypeError<String>(2, 2)",
+            "Template Error: Provided argument[0] Int type and required template parameter T is String Type",
+            "Template Error: Provided argument[1] Int type and required template parameter T is String Type");
+
+
+        failureInputWith(
+            "template<T>  testError (x: T, y: T): T { return x + y }" +
+                " return testError<String>(10.0)",
+            "wrong number of arguments, expected 2 but got 1",
+            "Template Error: Provided argument[0] Float type and required template parameter T is String Type"
+        );
+
+    }
 }

@@ -1,5 +1,6 @@
 package norswap.sigh;
 
+import norswap.autumn.positions.Span;
 import norswap.sigh.ast.*;
 import norswap.sigh.scopes.DeclarationContext;
 import norswap.sigh.scopes.DeclarationKind;
@@ -10,15 +11,19 @@ import norswap.sigh.types.*;
 import norswap.uranium.Attribute;
 import norswap.uranium.Reactor;
 import norswap.uranium.Rule;
+import norswap.uranium.SemanticError;
 import norswap.utils.visitors.ReflectiveFieldWalker;
 import norswap.utils.visitors.Walker;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Stack;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 import static norswap.sigh.ast.BinaryOperator.*;
+import static norswap.sigh.interpreter.Interpreter.getTypeFromName;
 import static norswap.utils.Util.cast;
 import static norswap.utils.Vanilla.forEachIndexed;
 import static norswap.utils.Vanilla.list;
@@ -135,6 +140,8 @@ public final class SemanticAnalysis
         walker.register(ParameterNode.class,            PRE_VISIT,  analysis::parameter);
         walker.register(FunDeclarationNode.class,       PRE_VISIT,  analysis::funDecl);
         walker.register(StructDeclarationNode.class,    PRE_VISIT,  analysis::structDecl);
+        // added for the template feature
+        walker.register(GenericDeclarationNode.class, PRE_VISIT,  analysis::genericDecl);
 
         //Logic Programming
         walker.register(QueryDeclarationNode.class,     PRE_VISIT,  analysis::queryDecl);
@@ -416,46 +423,98 @@ public final class SemanticAnalysis
     {
         this.inferenceContext = node;
 
-        Attribute[] dependencies = new Attribute[node.arguments.size() + 1];
+        int optional=node.expectedReturnType != null ? 2 : 0;
+        Attribute[] dependencies = new Attribute[node.arguments.size() + 1 + optional];
         dependencies[0] = node.function.attr("type");
+
         forEachIndexed(node.arguments, (i, arg) -> {
-            dependencies[i + 1] = arg.attr("type");
+            dependencies[i+1] = arg.attr("type");
             R.set(arg, "index", i);
         });
 
+        /* add the optional generic parameter to the dependency if they are present in the declaration */
+        int count = node.arguments.size() + 1;
+        if (node.expectedReturnType != null) {
+            dependencies[count ] = node.expectedReturnType.attr("value");
+            R.set(node.expectedReturnType, "index", count );
+            count += 1 ;
+        }
+
+        DeclarationContext context; DeclarationNode declNode;
+
+        if (node.expectedReturnType != null) {
+            String name = "";
+            if (node.function instanceof ReferenceNode) {
+                name = ((ReferenceNode) node.function).name;
+            }
+            context = scope.lookup(name);
+            SimpleTypeNode str= (SimpleTypeNode) node.expectedReturnType;
+
+            if(str.name.equals("String")) {
+                ReturnNode st = (ReturnNode) ((FunDeclarationNode) context.declaration).block.statements.get(0);
+                BinaryExpressionNode b = (BinaryExpressionNode) st.expression;
+                BinaryOperator usedOperator = b.operator;
+                if(usedOperator==MULTIPLY)
+                    R.error(new SemanticError("Cannot used multiply operation in strings ", null,node));
+            }
+            declNode = context != null ? context.declaration :
+                new FunDeclarationNode(new Span(0, 0), "", new ArrayList<>(), null, new BlockNode(null, new ArrayList<>()));
+            dependencies[count] = new Attribute(declNode, "type");
+        }
+
         R.rule(node, "type")
-        .using(dependencies)
-        .by(r -> {
-            Type maybeFunType = r.get(0);
+            .using(dependencies)
+            .by(r -> {
+                Type maybeFunType = r.get(0);
 
-            if (!(maybeFunType instanceof FunType)) {
-                r.error("trying to call a non-function expression: " + node.function, node.function);
-                return;
-            }
+                if (!(maybeFunType instanceof FunType)) {
+                    r.error("trying to call a non-function expression: " + node.function, node.function);
+                    return;
+                }
 
-            FunType funType = cast(maybeFunType);
-            r.set(0, funType.returnType);
+                FunType funType = cast(maybeFunType);
+                r.set(0, funType.returnType);
 
-            Type[] params = funType.paramTypes;
-            List<ExpressionNode> args = node.arguments;
+                Type[] params = funType.paramTypes;
+                List<ExpressionNode> args = node.arguments;
 
-            if (params.length != args.size())
-                r.errorFor(format("wrong number of arguments, expected %d but got %d",
-                        params.length, args.size()),
-                    node);
+                if (params.length != args.size())
+                    r.errorFor(format("wrong number of arguments, expected %d but got %d", params.length, args.size()), node);
 
-            int checkedArgs = Math.min(params.length, args.size());
+                int checkedArgs = Math.min(params.length, args.size());
 
-            for (int i = 0; i < checkedArgs; ++i) {
-                Type argType = r.get(i + 1);
-                Type paramType = funType.paramTypes[i];
-                if (!isAssignableTo(argType, paramType))
-                    r.errorFor(format(
-                            "incompatible argument provided for argument %d: expected %s but got %s",
-                            i, paramType, argType),
-                        node.arguments.get(i));
-            }
-        });
+                Object lastNode = r.dependencies[r.dependencies.length-1].node;
+
+                if (lastNode instanceof FunDeclarationNode) {
+                    if (node.expectedReturnType != null)
+                        node.mapTtoType.put(((FunDeclarationNode) lastNode).genericParam.name, node.expectedReturnType);
+                }
+
+                for (int i = 0; i < checkedArgs; ++i) {
+                    Type argType = r.get(i + 1);
+                    Type paramType = (funType.paramTypes[i] instanceof GenericType) ? getTypeFromName(node.expectedReturnType) : funType.paramTypes[i];
+
+                    if (!isAssignableTo(argType, paramType)) {
+                        if (funType.paramTypes[i] instanceof GenericType) {
+                            if (paramType == null) {
+                                r.errorFor(format(
+                                        " Template Error: Missing type of template parameter %s. Suggested template parameter type : %s",
+                                        funType.paramTypes[i].name(), argType),
+                                    node.arguments.get(i));
+                            } else {
+                                r.errorFor(format(
+                                    "Template Error: Provided argument[%d] %s type and required template parameter T is %s Type",
+                                    i, argType,  paramType, funType.paramTypes[i].name()), node.arguments.get(i));
+                            }
+                        } else {
+                            r.errorFor(format(
+                                    "Template Error: argument %d: expected %s but got %s", i, paramType, argType),
+                                node.arguments.get(i));
+                        }
+                    }
+
+                }
+            });
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -481,23 +540,40 @@ public final class SemanticAnalysis
 
     private void binaryExpression (BinaryExpressionNode node)
     {
-        R.rule(node, "type")
-        .using(node.left.attr("type"), node.right.attr("type"))
-        .by(r -> {
-            Type left  = r.get(0);
-            Type right = r.get(1);
+        Scope s = scope;
+        //DeclarationContext ctx = scope.lookup(((ReferenceNode) node.left).name);
+        boolean flag= checkIfGenericInAst(node,scope);
 
-            if (node.operator == ADD && (left instanceof StringType || right instanceof StringType))
-                r.set(0, StringType.INSTANCE);
-            else if (isArithmetic(node.operator))
-                binaryArithmetic(r, node, left, right);
-            else if (isComparison(node.operator))
-                binaryComparison(r, node, left, right);
-            else if (isLogic(node.operator))
-                binaryLogic(r, node, left, right);
-            else if (isEquality(node.operator))
-                binaryEquality(r, node, left, right);
-        });
+        R.rule(node, "scope")
+            .by(rule -> {
+                rule.set(0, s);
+            });
+
+        R.rule(node, "type")
+            .using(node.left.attr("type"), node.right.attr("type"))
+            .by(flag ? (r -> {
+
+                Type left  = r.get(0);
+                Type right = r.get(1);
+                r.set(0, (left instanceof GenericType) ? left : right);
+            }) : (r -> {
+                Type left  = r.get(0);
+                Type right = r.get(1);
+
+                if (left instanceof GenericType) left = ((GenericType) left).checkType();
+                if (right instanceof GenericType) right = ((GenericType) right).checkType();
+                if (node.operator == ADD && (left instanceof StringType || right instanceof StringType))
+                    r.set(0, StringType.INSTANCE);
+                else if (isArithmetic(node.operator))
+                    binaryArithmetic(r, node, left, right);
+                else if (isComparison(node.operator))
+                    binaryComparison(r, node, left, right);
+                else if (isLogic(node.operator))
+                    binaryLogic(r, node, left, right);
+                else if (isEquality(node.operator))
+                    binaryEquality(r, node, left, right);
+
+            }));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -654,6 +730,8 @@ public final class SemanticAnalysis
     private static boolean isTypeDecl (DeclarationNode decl)
     {
         if (decl instanceof StructDeclarationNode) return true;
+        /** added GenericDeclarationNode */
+        if (decl instanceof GenericDeclarationNode) return true;
         if (!(decl instanceof SyntheticDeclarationNode)) return false;
         SyntheticDeclarationNode synthetic = cast(decl);
         return synthetic.kind() == DeclarationKind.TYPE;
@@ -942,34 +1020,74 @@ public final class SemanticAnalysis
 
     private void funDecl (FunDeclarationNode node)
     {
+        // Preparing scope
         scope.declare(node.name, node);
         scope = new Scope(node, scope);
+
+        // Setting scope
         R.set(node, "scope", scope);
+        boolean isGeneric=false;
 
-        Attribute[] dependencies = new Attribute[node.parameters.size() + 1];
-        dependencies[0] = node.returnType.attr("value");
-        forEachIndexed(node.parameters, (i, param) ->
-            dependencies[i + 1] = param.attr("type"));
+        if(node.genericParam!=null)
+            isGeneric = node.genericParam.name.equals(((SimpleTypeNode) node.returnType).name);
 
-        R.rule(node, "type")
-        .using(dependencies)
-        .by (r -> {
-            Type[] paramTypes = new Type[node.parameters.size()];
-            for (int i = 0; i < paramTypes.length; ++i)
-                paramTypes[i] = r.get(i + 1);
-            r.set(0, new FunType(r.get(0), paramTypes));
+        List<ParameterNode> parameterNodes = node.parameters;
 
-        });
+        Attribute[] dependencies = new Attribute[parameterNodes.size() + (isGeneric ? 0 : 1)];
 
-        R.rule()
-        .using(node.block.attr("returns"), node.returnType.attr("value"))
-        .by(r -> {
-            boolean returns = r.get(0);
-            Type returnType = r.get(1);
-            if (!returns && !(returnType instanceof VoidType))
-                r.error("Missing return in function.", node);
-            // NOTE: The returned value presence & type is checked in returnStmt().
-        });
+        if (!isGeneric) {
+            dependencies[0] = node.returnType.attr("value");
+        }
+
+        boolean finalIsGeneric1 = isGeneric;
+        forEachIndexed(parameterNodes, (i, param) ->
+            dependencies[i + (finalIsGeneric1 ? 0 : 1)] = param.attr("type"));
+
+        if (dependencies.length > 0) {
+            boolean finalIsGeneric = isGeneric;
+            if(node.genericParam!=null) {
+                R.rule()
+                    .using(node.genericParam.attr("type"))
+                    .by(r -> {
+                        GenericDeclarationNode obj = (GenericDeclarationNode) r.dependencies[0].node;
+                        if (!(obj.name.equals("T"))) {
+                            r.error("T should be used as Template Parameter instead of " + obj.name , node);
+                        }
+                    });
+            }
+            R.rule(node, "type")
+                .using(dependencies)
+                .by (r -> {
+                    Type[] paramTypes = new Type[parameterNodes.size()];
+                    for (int i = 0; i < paramTypes.length; ++i)
+                        paramTypes[i] = r.get(i + (finalIsGeneric ? 0 : 1));
+
+
+                    r.set(0, new FunType(r.get(0), paramTypes));
+                });
+        }
+
+        // Checking return type based on whether we're using a template identifier
+        if (isGeneric) {
+            R.rule()
+                .using(node.block.attr("returns"), node.returnType.attr("value"))
+                .by(r -> {
+                    boolean returns = r.get(0);
+                    Type returnType = r.get(1);
+                    if (!returns && !(returnType instanceof VoidType))
+                        r.error("Missing return in function.", node);
+                });
+        } else {
+            R.rule()
+                .using(node.block.attr("returns"), node.returnType.attr("value"))
+                .by(r -> {
+                    boolean returns = r.get(0);
+                    Type returnType = r.get(1);
+                    if (!returns && !(returnType instanceof VoidType))
+                        r.error("Missing return in function.", node);
+                });
+        }
+
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -978,6 +1096,12 @@ public final class SemanticAnalysis
         scope.declare(node.name, node);
         R.set(node, "type", TypeType.INSTANCE);
         R.set(node, "declared", new StructType(node));
+    }
+    // ---------------------------------------------------------------------------------------------
+    private void genericDecl (GenericDeclarationNode node) {
+        scope.declare(node.name, node);
+        R.set(node, "type", TypeType.INSTANCE);
+        R.set(node, "declared", new GenericType(node));
     }
 
     // endregion
@@ -1020,34 +1144,43 @@ public final class SemanticAnalysis
 
     private void returnStmt (ReturnNode node)
     {
+        Scope s= scope;
         R.set(node, "returns", true);
-
+        // DeclarationContext ctx = s.lookup((ReferenceNode)((ExpressionNode)((ReturnNode)node).expression).function);
         FunDeclarationNode function = currentFunction();
-        if (function == null) // top-level return
+        if (function == null)
             return;
+
+        /* returns true if the return Type is T i,e GenericDeclarationNode*/
+        boolean flag = checkIfGenericInAst(node, scope);
 
         if (node.expression == null)
             R.rule()
-            .using(function.returnType, "value")
-            .by(r -> {
-               Type returnType = r.get(0);
-               if (!(returnType instanceof VoidType))
-                   r.error("Return without value in a function with a return type.", node);
-            });
-        else
+                .using(function.returnType, "value")
+                .by(r -> {
+                    Type returnType = r.get(0);
+                    if (!(returnType instanceof VoidType))
+                        r.error("Return without value in a function with a return type.", node);
+                });
+        else {
             R.rule()
-            .using(function.returnType.attr("value"), node.expression.attr("type"))
-            .by(r -> {
-                Type formal = r.get(0);
-                Type actual = r.get(1);
-                if (formal instanceof VoidType)
-                    r.error("Return with value in a Void function.", node);
-                else if (!isAssignableTo(actual, formal)) {
-                    r.errorFor(format(
-                        "Incompatible return type, expected %s but got %s", formal, actual),
-                        node.expression);
-                }
-            });
+                .using(function.returnType.attr("value"), node.expression.attr("type"))
+                .by(r -> {
+                    Type formal = r.get(0);
+                    Type actual = r.get(1);
+
+                    formal = formal instanceof GenericType ? ((GenericType) formal).checkType() : formal;
+
+                    if (formal instanceof VoidType)
+                        r.error("Return with value in a Void function.", node);
+                    else if (flag || formal instanceof GenericType) {
+                    } else if (!isAssignableTo(actual, formal)) {
+                        r.errorFor(format(
+                                "Incompatible return type, expected %s but got %s", formal, actual),
+                            node.expression);
+                    }
+                });
+        }
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -1081,6 +1214,50 @@ public final class SemanticAnalysis
             .filter(this::isReturnContainer)
             .map(it -> it.attr("returns"))
             .toArray(Attribute[]::new);
+    }
+
+    /** Take the outermost node and explore the innermost node associated with it by traversing the AST */
+    private boolean checkIfGenericInAst(SighNode node, Scope scope) {
+
+        Stack<SighNode> stack = new Stack<>();
+        stack.push(node);
+
+        while (!stack.isEmpty()) {
+            SighNode popN = stack.pop();
+            if (popN instanceof GenericDeclarationNode) {
+                return true;
+            }else if(popN instanceof ReturnNode) {
+                stack.push(((ReturnNode) popN).expression);
+            }else if (popN instanceof BinaryExpressionNode) {
+                stack.push(((BinaryExpressionNode) popN).left);
+                stack.push(((BinaryExpressionNode) popN).right);
+            }else if (popN instanceof ReferenceNode) {
+                DeclarationContext ctx = scope.lookup(((ReferenceNode) popN).name);
+                if (ctx != null){
+                    stack.push(ctx.declaration);
+                }
+            }else if(popN instanceof ParameterNode) {
+                TypeNode t = ((ParameterNode) popN).type;
+
+                if (t instanceof SimpleTypeNode && ((SimpleTypeNode) t).name.equals("T")) {
+                    DeclarationContext ctx = scope.lookup(((ParameterNode) popN).name);
+
+                    if (ctx != null) {
+                        SighNode sn = ctx.scope.node;
+
+                        if (sn instanceof FunDeclarationNode) {
+                            GenericDeclarationNode declNode= ((FunDeclarationNode) sn).genericParam;
+                            if ( declNode != null && declNode.name.equals(((SimpleTypeNode) t).name)) {
+                                if(declNode.name.equals("T")) {
+                                    stack.push(declNode);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     // endregion
