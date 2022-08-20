@@ -8,6 +8,7 @@ import norswap.sigh.scopes.SyntheticDeclarationNode;
 import norswap.sigh.types.FloatType;
 import norswap.sigh.types.IntType;
 import norswap.sigh.types.StringType;
+import norswap.sigh.types.FactType;
 import norswap.sigh.types.TermType;
 import norswap.sigh.types.Type;
 import norswap.uranium.Reactor;
@@ -64,6 +65,8 @@ public final class Interpreter
         // expressions
         //LP
         visitor.register(TermNode.class,                 this::termLiteral);
+        //  visitor.register(FactCallNode.class,            this:: factCall);
+
         //
         visitor.register(IntLiteralNode.class,           this::intLiteral);
         visitor.register(FloatLiteralNode.class,         this::floatLiteral);
