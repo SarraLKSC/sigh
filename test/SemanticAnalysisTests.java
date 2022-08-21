@@ -60,6 +60,8 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
         successInput("return !false");
         successInput("return !true");
         successInput("return !!true");
+        successInput("return --4");
+        successInput("return ++3");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -317,6 +319,7 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
         successInput("var i: Int = 0; while (i < 3) { print(\"\" + i); i = i + 1 } ");
 
         successInput("for ( var x : Int=0 : x < 3 : ++ x) { print(\"\" + x); x = x + 1 } ");
+        successInput("for ( var x : Int=10 : x > 7 : -- x) { print(\"\" + x) } ");
 
         failureInputWith("if 1 return 1",
             "If statement with a non-boolean condition of type: Int");

@@ -348,8 +348,10 @@ public final class Interpreter
         // there is only NOT
         if(node.operator == UnaryOperator.NOT)
             return ! (boolean) get(node.operand);
-        else
+        else if (node.operator == UnaryOperator.INCRE)
             return Integer.valueOf(get(node.operand).toString())+1;
+         else
+           return Integer.valueOf(get(node.operand).toString())-1;
     }
 
     // ---------------------------------------------------------------------------------------------

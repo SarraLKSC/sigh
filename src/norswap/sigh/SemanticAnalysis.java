@@ -543,6 +543,17 @@ public final class SemanticAnalysis
                         r.error("Trying to increment type: " + opType, node);
                 });
         }
+
+        if(node.operator == UnaryOperator.DECRE){
+            R.set(node, "type", IntType.INSTANCE);
+            R.rule()
+                .using(node.operand, "type")
+                .by(r -> {
+                    Type opType = r.get(0);
+                    if (!(opType instanceof IntType))
+                        r.error("Trying to increment type: " + opType, node);
+                });
+        }
     }
 
     // endregion

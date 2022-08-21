@@ -3,8 +3,7 @@ package norswap.sigh;
 import norswap.autumn.Grammar;
 import norswap.sigh.ast.*;
 
-import static norswap.sigh.ast.UnaryOperator.INCRE;
-import static norswap.sigh.ast.UnaryOperator.NOT;
+import static norswap.sigh.ast.UnaryOperator.*;
 
 @SuppressWarnings("Convert2MethodRef")
 // TO-DO:
@@ -57,6 +56,7 @@ public class SighGrammar extends Grammar
     public rule BANG            = word("!");
     //INCREMENT
     public rule INC            = word("++");
+    public rule DEC            = word("--");
     public rule DOT             = word(".");
     public rule DOLLAR          = word("$");
     public rule COMMA           = word(",");
@@ -250,8 +250,14 @@ public class SighGrammar extends Grammar
         .prefix(INC.as_val(INCRE),
             $ -> new UnaryExpressionNode($.span(), $.$[0], $.$[1]));
 
-    public rule add_expr = left_expression()
+
+    public rule dec_expression = right_expression()
         .operand(inc_expression)
+        .prefix(DEC.as_val(DECRE),
+            $ -> new UnaryExpressionNode($.span(), $.$[0], $.$[1]));
+
+    public rule add_expr = left_expression()
+        .operand(dec_expression)
         .infix(add_op,
             $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 

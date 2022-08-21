@@ -131,6 +131,8 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("!false", true);
         checkExpr("!true", false);
         checkExpr("!!true", true);
+        checkExpr("++2", 3);
+        checkExpr("--2", 1);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -336,6 +338,8 @@ public final class InterpreterTests extends TestFixture {
         check("var i: Int = 0; while (i < 3) { print(\"\" + i); i = i + 1 } ", null, "0\n1\n2\n");
         // For loop
         check("for(var i: Int = 0: i < 3: ++ i) { print(\"\" + i); i = i + 2 } ", null, "0\n2\n");
+
+        check("for(var i: Int = 10: i > 7: --i) { print(\"\" + i); i=i-1} ", null, "10\n9\n8\n");
 
     }
 

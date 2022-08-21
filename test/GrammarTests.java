@@ -212,6 +212,14 @@ public class GrammarTests extends AutumnTestFixture {
                 new BinaryExpressionNode(null,new ReferenceNode(null,"x"),LOWER,intlit(3)),
                 new UnaryExpressionNode(null,UnaryOperator.INCRE,new ReferenceNode(null,"x")),
                 new BlockNode(null, asList(new ReturnNode(null, null)))));
+
+        successExpect("for ( var x : Int=10 : x < 0 : -- x) { return } ",
+            new ForNode(null,
+                new VarDeclarationNode(null, "x", new SimpleTypeNode(null, "Int"), intlit(10)),
+                new BinaryExpressionNode(null,new ReferenceNode(null,"x"),LOWER,intlit(0)),
+                new UnaryExpressionNode(null,UnaryOperator.DECRE,new ReferenceNode(null,"x")),
+                new BlockNode(null, asList(new ReturnNode(null, null)))));
+
     }
 
     @Test public void testGenericsDeclaration() {
