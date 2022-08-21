@@ -182,6 +182,7 @@ public final class Interpreter
         switch (node.operator) {
             case OR:  return booleanOp(node, false);
             case AND: return booleanOp(node, true);
+            case XOR: return  xorOp(node);
         }
 
         Object left  = get(node.left);
@@ -217,6 +218,13 @@ public final class Interpreter
         return isAnd
                 ? left && (boolean) get(node.right)
                 : left || (boolean) get(node.right);
+    }
+
+    private boolean xorOp (BinaryExpressionNode node)
+    {
+        boolean left = get(node.left);
+        System.out.println(left ^ (boolean) get(node.right));
+        return  left ^ (boolean) get(node.right);
     }
 
     // ---------------------------------------------------------------------------------------------

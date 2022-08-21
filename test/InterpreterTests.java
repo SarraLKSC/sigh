@@ -184,6 +184,8 @@ public final class InterpreterTests extends TestFixture {
         checkExpr("true  && false", false);
         checkExpr("false && false", false);
         checkExpr("false || false", false);
+        //XOR operation
+        checkExpr("false ^ false", false);
 
         checkExpr("1 + \"a\"", "1a");
         checkExpr("\"a\" + 1", "a1");

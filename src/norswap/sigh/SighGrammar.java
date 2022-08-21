@@ -57,6 +57,8 @@ public class SighGrammar extends Grammar
     public rule DOT             = word(".");
     public rule DOLLAR          = word("$");
     public rule COMMA           = word(",");
+    //XOR
+    public rule CAP             = word("^");
 
     // LP lexical additions
     public rule HASHTAG         = word("#");
@@ -259,8 +261,12 @@ public class SighGrammar extends Grammar
         .infix(BAR_BAR.as_val(BinaryOperator.OR),
             $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
+    public rule xor_expression = left_expression().operand(or_expression)
+        .infix(CAP.as_val(BinaryOperator.XOR),
+            $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
+
     public rule assignment_expression = right_expression()
-        .operand(or_expression)
+        .operand(xor_expression)
         .infix(EQUALS,
             $ -> new AssignmentNode($.span(), $.$[0], $.$[1]));
 

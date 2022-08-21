@@ -112,10 +112,15 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
         successInput("return true || false");
         successInput("return false || true");
         successInput("return false || false");
+        //XOR operation
+        successInput("return false ^ true");
 
         failureInputWith("return false || 1",
             "Attempting to perform binary logic on non-boolean type: Int");
         failureInputWith("return 2 || true",
+            "Attempting to perform binary logic on non-boolean type: Int");
+        //XOR operation
+        failureInputWith("return 1^2",
             "Attempting to perform binary logic on non-boolean type: Int");
 
         successInput("return 1 + \"a\"");
