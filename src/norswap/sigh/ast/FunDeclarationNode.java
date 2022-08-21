@@ -9,7 +9,7 @@ public class FunDeclarationNode extends DeclarationNode
     public final List<ParameterNode> parameters;
     public final TypeNode returnType;
     public final BlockNode block;
-    public final GenericDeclarationNode genericParam;
+    public GenericDeclarationNode genericParam;
 
     @SuppressWarnings("unchecked")
     public FunDeclarationNode(Span span, Object name, Object parameters, Object returnType, Object block) {
@@ -19,25 +19,13 @@ public class FunDeclarationNode extends DeclarationNode
         this.returnType = returnType == null ? new SimpleTypeNode(new Span(span.start, span.start), "Void")
             : Util.cast(returnType, TypeNode.class);
         this.block = Util.cast(block, BlockNode.class);
-        this.genericParam = null;
 
     }
 
     @SuppressWarnings("unchecked")
     public FunDeclarationNode(Span span, Object genericParams, Object name, Object parameters, Object returnType, Object block) {
-        super(span);
+        this(span,name,parameters,returnType,block);
         this.genericParam = Util.cast(genericParams, GenericDeclarationNode.class);
-        this.name = Util.cast(name, String.class);
-        this.block = Util.cast(block, BlockNode.class);
-
-        this.parameters = Util.cast(parameters, List.class);
-
-        this.returnType = returnType == null
-            ? new SimpleTypeNode(new Span(span.start, span.start), "Void")
-            : Util.cast(returnType, TypeNode.class);
-
-
-        return;
     }
 
 

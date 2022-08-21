@@ -21,10 +21,8 @@ public class FunCallNode extends ExpressionNode
 
     @SuppressWarnings("unchecked")
     public FunCallNode(Span span, Object optionalArg, Object function, Object arguments) {
-        super(span);
+        this(span,function,arguments);
         this.expectedReturnType = Util.cast(optionalArg, TypeNode.class);
-        this.function = Util.cast(function, ExpressionNode.class);
-        this.arguments = Util.cast(arguments, List.class);
         this.mapTtoType = new HashMap<>();
 
     }
