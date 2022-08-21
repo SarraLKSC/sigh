@@ -563,15 +563,12 @@ public final class SemanticAnalysis
 
         R.rule(node, "type")
             .using(node.left.attr("type"), node.right.attr("type"))
-            .by(flag ? (r -> {
-
+            .by(r -> {
                 Type left  = r.get(0);
                 Type right = r.get(1);
-                r.set(0, (left instanceof GenericType) ? left : right);
-            }) : (r -> {
-                Type left  = r.get(0);
-                Type right = r.get(1);
-
+                if(flag) {
+                  r.set(0, (left instanceof GenericType) ? left : right);
+                }else {
                 if (left instanceof GenericType){
                     left = ((GenericType) left).node!=null?((GenericType) left).node.type:left;
                 }
@@ -588,8 +585,8 @@ public final class SemanticAnalysis
                     binaryLogic(r, node, left, right);
                 else if (isEquality(node.operator))
                     binaryEquality(r, node, left, right);
-
-            }));
+              }
+            });
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -1043,11 +1040,11 @@ public final class SemanticAnalysis
         // Setting scope
         R.set(node, "scope", scope);
         boolean isGeneric=false;
+        List<ParameterNode> parameterNodes = node.parameters;
 
+        /* if the node contains the Template Parameter in declaration*/
         if(node.genericParam!=null)
             isGeneric = node.genericParam.name.equals(((SimpleTypeNode) node.returnType).name);
-
-        List<ParameterNode> parameterNodes = node.parameters;
 
         Attribute[] dependencies = new Attribute[parameterNodes.size() + (isGeneric ? 0 : 1)];
 
@@ -1077,8 +1074,6 @@ public final class SemanticAnalysis
                     Type[] paramTypes = new Type[parameterNodes.size()];
                     for (int i = 0; i < paramTypes.length; ++i)
                         paramTypes[i] = r.get(i + (finalIsGeneric ? 0 : 1));
-
-
                     r.set(0, new FunType(r.get(0), paramTypes));
                 });
         }
@@ -1102,6 +1097,7 @@ public final class SemanticAnalysis
         R.set(node, "declared", new StructType(node));
     }
     // ---------------------------------------------------------------------------------------------
+    /* GenericDeclarationNode is added */
     private void genericDecl (GenericDeclarationNode node) {
         scope.declare(node.name, node);
         R.set(node, "type", TypeType.INSTANCE);
