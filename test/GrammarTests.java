@@ -202,8 +202,17 @@ public class GrammarTests extends AutumnTestFixture {
             new BlockNode(null, asList(new ReturnNode(null, null)))));
     }
 
-    @Test public void testGenerics() {
+    @Test public void testGenericsDeclaration() {
         rule = grammar.fun_decl;
+
+        successExpect("template<T>  testTemplate(x:T):T { return x }", new FunDeclarationNode(
+                null, new GenericDeclarationNode(null, "T"),
+                "testTemplate",
+                Collections.singletonList(new ParameterNode(null, "x",
+                    new SimpleTypeNode(null, "T"))), new SimpleTypeNode(null, "T"),
+                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "x"))))
+            )
+        );
 
         successExpect("template<T> testFloat(x:Float):Float { return x }", new FunDeclarationNode(
                 null, new GenericDeclarationNode(null, "T"),
@@ -222,35 +231,21 @@ public class GrammarTests extends AutumnTestFixture {
                 new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "str"))))
             )
         );
-
-        successExpect("template<T>  testTemplate(x:T):T { return x }", new FunDeclarationNode(
-                null,  new GenericDeclarationNode(null, "T"),
-                "testTemplate",
-                Collections.singletonList(new ParameterNode(null, "x",
-                    new SimpleTypeNode(null, "T"))), new SimpleTypeNode(null, "T"),
-                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "x"))))
-            )
-        );
-
+    }
+    @Test public void testGenericCall() {
         rule = grammar.suffix_expression;
 
         successExpect("genericInt<Int>(11, 10)",
-            new FunCallNode(null,
-                new SimpleTypeNode(null, "Int"),
-                new ReferenceNode(null, "genericInt"),
+            new FunCallNode(null, new SimpleTypeNode(null, "Int"), new ReferenceNode(null, "genericInt"),
                 asList(intlit(11), intlit(10))));
 
         successExpect("genericFloat<Float>(12.0, 22.0)",
-            new FunCallNode(null,
-                new SimpleTypeNode(null, "Float"),
-                new ReferenceNode(null, "genericFloat"),
-                asList(floatlit(12), floatlit(22))));
+            new FunCallNode(null, new SimpleTypeNode(null, "Float"),
+                new ReferenceNode(null, "genericFloat"), asList(floatlit(12), floatlit(22))));
 
         successExpect("genericString<String>(\"Hello\", \"Java\")",
-            new FunCallNode(null,
-                new SimpleTypeNode(null, "String"),
-                new ReferenceNode(null, "genericString"),
-                asList(stringlit("Hello"), stringlit("Java"))));
+            new FunCallNode(null, new SimpleTypeNode(null, "String"),
+                new ReferenceNode(null, "genericString"), asList(stringlit("Hello"), stringlit("Java"))));
     }
 
     // ---------------------------------------------------------------------------------------------
