@@ -424,8 +424,6 @@ public final class SemanticAnalysis
     {
         this.inferenceContext = node;
         DeclarationContext context;
-        DeclarationNode declNode;
-
 
         int optional=node.expectedReturnType != null ? 2 : 0;
 
@@ -460,10 +458,7 @@ public final class SemanticAnalysis
                 if(usedOperator!=ADD)
                     R.error(new SemanticError("Only Add operation is valid in Strings", null,node));
             }
-            declNode = context != null ?
-                context.declaration :
-                new FunDeclarationNode(new Span(0, 0), "", new ArrayList<>(), null, new BlockNode(null, new ArrayList<>()));
-            dependencies[count] = new Attribute(declNode, "type");
+            dependencies[count] = new Attribute(context.declaration, "type");
         }
 
         R.rule(node, "type")
