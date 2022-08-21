@@ -392,11 +392,25 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
                 "return stringConcat<String>(\"Hello\", \"Java\")"
         );
 
+        successInput(
+            "template<T> stringConcat (x: T, y: T,z: T): T { return x + y+ z } " +
+                "return stringConcat<String>(\"Hello\", \"Java\",\"17\")"
+        );
+
         /* Testing the Failure Scenarios */
 
         failureInputWith(
             "template<T>  failStringOperation (a: T, b: T): T { return a * b } return failStringOperation<String>(\"Hello\", \"Java\")",
             "Cannot used multiply operation in strings");
+
+        failureInputWith(
+            "template<T> stringConcat (x: T, y: T): Void { return x + y } " +
+                "return stringConcat<String>(\"Hello\", \"Java\")",
+            "Return with value in a Void function");
+
+        failureInputWith(
+            "template<T> stringConcat (x: Void, y: Void): T { return x + y } return stringConcat<String>(\"Hello\", \"Java\")",
+            "Trying to add Void with Void"," argument 0: expected Void but got String"," argument 1: expected Void but got String");
 
 
         failureInputWith(

@@ -375,54 +375,9 @@ public final class InterpreterTests extends TestFixture {
         /* Check the declaration */
 
         check(
-            "template<T> checkDeclaration(x: T, y: T): Int { return x*y } ",
-            null
-        );
-
-
-        check(
-            "template<T> checkDeclaration (x: Int, y: Int): T { return x+y } ",
-            null
-        );
-
-
-        check(
             "template<T> checkDeclaration (x: T, y: T): T { return x+y } ",
             null
         );
-
-        /* Error for Wrong type of Template Variable A */
-        checkThrows(
-            "template<A> add (x: Int, y: Int): Int { return x+y } ", AssertionError.class
-        );
-
-        /* Different argument from the return type expected */
-        checkThrows(
-            "template<T>  add (x: T, y: T): T { return x+y }; " +
-                "return add<String>(10, 2);",
-            AssertionError.class
-        );
-
-        checkThrows(
-            "template<T>  multiplyString (x: T, y: T): T { return a * b }; " +
-                "return multiplyString<String>(\"Hello\", \"Java\");",
-            AssertionError.class
-        );
-
-
-        /* Grammatical Errors as the definition not allow Two template parameters or arguments*/
-        checkThrows(
-            "template<T> add (x: T, y: Int): Int { return x+y }; " +
-                "return add<Int, Int>(1, 1);",
-            AssertionError.class
-        );
-
-        checkThrows(
-            "template<T,T> add (x: T, y: Int): Int { return x+y }; " +
-                "return add<Int>(1, 1);",AssertionError.class
-        );
-
-
 
 
         /* checking the Sum for int type actual parameters */
@@ -501,6 +456,37 @@ public final class InterpreterTests extends TestFixture {
                 "template<T> third (x: T, y: T): T { return x*y};" +
                 "return first<Int>(6, 1) + second<Int>(3, 1) * third<Int>(4,8)",
             71L
+        );
+
+        /* Error for Wrong type of Template Variable A */
+        checkThrows(
+            "template<A> add (x: Int, y: Int): Int { return x+y } ", AssertionError.class
+        );
+
+        /* Different argument from the return type expected */
+        checkThrows(
+            "template<T>  add (x: T, y: T): T { return x+y }; " +
+                "return add<String>(10, 2);",
+            AssertionError.class
+        );
+
+        checkThrows(
+            "template<T>  multiplyString (x: T, y: T): T { return a * b }; " +
+                "return multiplyString<String>(\"Hello\", \"Java\");",
+            AssertionError.class
+        );
+
+
+        /* Grammatical Errors as the definition not allow Two template parameters or arguments*/
+        checkThrows(
+            "template<T> add (x: T, y: Int): Int { return x+y }; " +
+                "return add<Int, Int>(1, 1);",
+            AssertionError.class
+        );
+
+        checkThrows(
+            "template<T,T> add (x: T, y: Int): Int { return x+y }; " +
+                "return add<Int>(1, 1);",AssertionError.class
         );
 
 

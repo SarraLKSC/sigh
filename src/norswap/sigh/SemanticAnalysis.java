@@ -565,7 +565,7 @@ public final class SemanticAnalysis
     {
         Scope s = scope;
         //DeclarationContext ctx = scope.lookup(((ReferenceNode) node.left).name);
-        boolean flag= checkIfGenericInAst(node,scope);
+        boolean flag= checkIfGenericInAst(node.left,scope) || checkIfGenericInAst(node.right,scope);
 
         R.rule(node, "scope")
             .by(rule -> {
@@ -1090,8 +1090,6 @@ public final class SemanticAnalysis
                 });
         }
 
-        // Checking return type based on whether we're using a template identifier
-        if (isGeneric) {
             R.rule()
                 .using(node.block.attr("returns"), node.returnType.attr("value"))
                 .by(r -> {
@@ -1100,16 +1098,6 @@ public final class SemanticAnalysis
                     if (!returns && !(returnType instanceof VoidType))
                         r.error("Missing return in function.", node);
                 });
-        } else {
-            R.rule()
-                .using(node.block.attr("returns"), node.returnType.attr("value"))
-                .by(r -> {
-                    boolean returns = r.get(0);
-                    Type returnType = r.get(1);
-                    if (!returns && !(returnType instanceof VoidType))
-                        r.error("Missing return in function.", node);
-                });
-        }
 
     }
 
@@ -1207,9 +1195,6 @@ public final class SemanticAnalysis
         if (function == null)
             return;
 
-        /* returns true if the return Type is T i,e GenericDeclarationNode*/
-        boolean flag = checkIfGenericInAst(node, scope);
-
         if (node.expression == null)
             R.rule()
                 .using(function.returnType, "value")
@@ -1218,7 +1203,7 @@ public final class SemanticAnalysis
                     if (!(returnType instanceof VoidType))
                         r.error("Return without value in a function with a return type.", node);
                 });
-        else {
+
             R.rule()
                 .using(function.returnType.attr("value"), node.expression.attr("type"))
                 .by(r -> {
@@ -1229,14 +1214,10 @@ public final class SemanticAnalysis
 
                     if (formal instanceof VoidType)
                         r.error("Return with value in a Void function.", node);
-                    else if (flag || formal instanceof GenericType) {
-                    } else if (!isAssignableTo(actual, formal)) {
-                        r.errorFor(format(
-                                "Incompatible return type, expected %s but got %s", formal, actual),
-                            node.expression);
+                     else if (!isAssignableTo(actual, formal)) {
+                        r.errorFor(format("Incompatible return type, expected %s but got %s", formal, actual), node.expression);
                     }
                 });
-        }
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -1282,11 +1263,6 @@ public final class SemanticAnalysis
             SighNode popN = stack.pop();
             if (popN instanceof GenericDeclarationNode) {
                 return true;
-            }else if(popN instanceof ReturnNode) {
-                stack.push(((ReturnNode) popN).expression);
-            }else if (popN instanceof BinaryExpressionNode) {
-                stack.push(((BinaryExpressionNode) popN).left);
-                stack.push(((BinaryExpressionNode) popN).right);
             }else if (popN instanceof ReferenceNode) {
                 DeclarationContext ctx = scope.lookup(((ReferenceNode) popN).name);
                 if (ctx != null){

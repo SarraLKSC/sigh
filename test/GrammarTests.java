@@ -225,33 +225,25 @@ public class GrammarTests extends AutumnTestFixture {
     @Test public void testGenericsDeclaration() {
         rule = grammar.fun_decl;
 
-        successExpect("template<T>  testTemplate(x:T):T { return x }", new FunDeclarationNode(
+        successExpect("template<T>  testTemplate(x:T):T { return x + x }", new FunDeclarationNode(
                 null, new GenericDeclarationNode(null, "T"),
                 "testTemplate",
                 Collections.singletonList(new ParameterNode(null, "x",
                     new SimpleTypeNode(null, "T"))), new SimpleTypeNode(null, "T"),
-                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "x"))))
-            )
-        );
+                new BlockNode(null, asList(new ReturnNode(null,(new BinaryExpressionNode(null, new ReferenceNode(null, "x"),
+                    ADD,new ReferenceNode(null, "x"))))))));
 
-        successExpect("template<T> testFloat(x:Float):Float { return x }", new FunDeclarationNode(
+        successExpect("template<T> testTwoArguments(x:T,y:T):T { return x * y }", new FunDeclarationNode(
                 null, new GenericDeclarationNode(null, "T"),
-                "testFloat",
-                Collections.singletonList(new ParameterNode(null, "x", new SimpleTypeNode(null, "Float"))),
-                new SimpleTypeNode(null, "Float"),
-                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "x"))))
-            )
-        );
-
-        successExpect("template<T> testString(str:T):String { return str}", new FunDeclarationNode(
-                null, new GenericDeclarationNode(null, "T"),
-                "testString",
-                Collections.singletonList(new ParameterNode(null, "str", new SimpleTypeNode(null, "T"))),
-                new SimpleTypeNode(null, "String"),
-                new BlockNode(null, asList(new ReturnNode(null, new ReferenceNode(null, "str"))))
-            )
-        );
+                "testTwoArguments",
+                asList(new ParameterNode(null, "x", new SimpleTypeNode(null, "T")),
+                    new ParameterNode(null, "y", new SimpleTypeNode(null, "T"))),
+                new SimpleTypeNode(null, "T"),
+                new BlockNode(null, asList(new ReturnNode(null,
+                    (new BinaryExpressionNode(null, new ReferenceNode(null, "x"),
+                    MULTIPLY,new ReferenceNode(null, "y"))))))));
     }
+
     @Test public void testGenericCall() {
         rule = grammar.suffix_expression;
 
