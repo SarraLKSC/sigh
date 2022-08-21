@@ -98,6 +98,8 @@ public class GrammarTests extends AutumnTestFixture {
         successExpect("false", new ReferenceNode(null, "false"));
         successExpect("null", new ReferenceNode(null, "null"));
         successExpect("!false", new UnaryExpressionNode(null, UnaryOperator.NOT, new ReferenceNode(null, "false")));
+        successExpect("++x", new UnaryExpressionNode(null, UnaryOperator.INCRE, new ReferenceNode(null, "x")));
+        successExpect("--x", new UnaryExpressionNode(null, UnaryOperator.DECRE, new ReferenceNode(null, "x")));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -204,8 +206,6 @@ public class GrammarTests extends AutumnTestFixture {
             new BlockNode(null, asList(new ReturnNode(null, null)))));
 
         //For loop test added
-        // New Implementation
-
         successExpect("for ( var x : Int=0 : x < 3 : ++ x) { return } ",
             new ForNode(null,
                 new VarDeclarationNode(null, "x", new SimpleTypeNode(null, "Int"), intlit(0)),

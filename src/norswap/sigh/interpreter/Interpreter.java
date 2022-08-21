@@ -616,8 +616,7 @@ public final class Interpreter
             DeclarationNode decl = scope.lookupLocal(n.function.contents());
 
             TypeNode funcRet = ((FunDeclarationNode) decl).returnType;
-            if (funcRet instanceof SimpleTypeNode &&
-                ((SimpleTypeNode) funcRet).name.equals("T") ) {
+            if (funcRet instanceof SimpleTypeNode && ((SimpleTypeNode) funcRet).name.equals("T") ) {
                 String returnStr = ((SimpleTypeNode) funcRet).name;
 
                 if (n.expectedReturnType.contents().equals(returnStr)) {
