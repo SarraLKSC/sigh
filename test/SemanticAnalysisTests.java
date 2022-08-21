@@ -308,7 +308,7 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
     // ---------------------------------------------------------------------------------------------
 
     @Test
-    public void testIfWhile () {
+    public void testIfWhileFor () {
         successInput("if (true) return 1 else return 2");
         successInput("if (false) return 1 else return 2");
         successInput("if (false) return 1 else if (true) return 2 else return 3 ");
@@ -316,8 +316,14 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
 
         successInput("var i: Int = 0; while (i < 3) { print(\"\" + i); i = i + 1 } ");
 
+        successInput("for ( var x : Int=0 : x < 3 : ++ x) { print(\"\" + x); x = x + 1 } ");
+
         failureInputWith("if 1 return 1",
             "If statement with a non-boolean condition of type: Int");
+        // Added Test for for loop
+        failureInputWith("for ( var x : Float=0 : x < 3 : ++ x) { return 2 }",
+            "Trying to increment type: Float","Intialization variable is non-integer:Float");
+
         failureInputWith("while 1 return 1",
             "While statement with a non-boolean condition of type: Int");
     }

@@ -202,6 +202,16 @@ public class GrammarTests extends AutumnTestFixture {
         successExpect("while 1 < 2 { return } ", new WhileNode(null,
             new BinaryExpressionNode(null, intlit(1), LOWER, intlit(2)),
             new BlockNode(null, asList(new ReturnNode(null, null)))));
+
+        //For loop test added
+        // New Implementation
+
+        successExpect("for ( var x : Int=0 : x < 3 : ++ x) { return } ",
+            new ForNode(null,
+                new VarDeclarationNode(null, "x", new SimpleTypeNode(null, "Int"), intlit(0)),
+                new BinaryExpressionNode(null,new ReferenceNode(null,"x"),LOWER,intlit(3)),
+                new UnaryExpressionNode(null,UnaryOperator.INCRE,new ReferenceNode(null,"x")),
+                new BlockNode(null, asList(new ReturnNode(null, null)))));
     }
 
     @Test public void testGenericsDeclaration() {

@@ -327,13 +327,16 @@ public final class InterpreterTests extends TestFixture {
     // ---------------------------------------------------------------------------------------------
 
     @Test
-    public void testIfWhile () {
+    public void testIfWhileFor () {
         check("if (true) return 1 else return 2", 1L);
         check("if (false) return 1 else return 2", 2L);
         check("if (false) return 1 else if (true) return 2 else return 3 ", 2L);
         check("if (false) return 1 else if (false) return 2 else return 3 ", 3L);
 
         check("var i: Int = 0; while (i < 3) { print(\"\" + i); i = i + 1 } ", null, "0\n1\n2\n");
+        // For loop
+        check("for(var i: Int = 0: i < 3: ++ i) { print(\"\" + i); i = i + 2 } ", null, "0\n2\n");
+
     }
 
     // ---------------------------------------------------------------------------------------------

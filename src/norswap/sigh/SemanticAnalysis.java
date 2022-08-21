@@ -161,6 +161,7 @@ public final class SemanticAnalysis
         walker.register(ExpressionStatementNode.class,  PRE_VISIT,  node -> {});
         walker.register(IfNode.class,                   PRE_VISIT,  analysis::ifStmt);
         walker.register(WhileNode.class,                PRE_VISIT,  analysis::whileStmt);
+        walker.register(ForNode.class,                PRE_VISIT,  analysis::forStmt);
         walker.register(ReturnNode.class,               PRE_VISIT,  analysis::returnStmt);
 
         walker.registerFallback(POST_VISIT, node -> {});
@@ -521,16 +522,27 @@ public final class SemanticAnalysis
 
     private void unaryExpression (UnaryExpressionNode node)
     {
-        assert node.operator == UnaryOperator.NOT; // only one for now
-        R.set(node, "type", BoolType.INSTANCE);
+        if(node.operator == UnaryOperator.NOT){
+            R.set(node, "type", BoolType.INSTANCE);
+            R.rule()
+                .using(node.operand, "type")
+                .by(r -> {
+                    Type opType = r.get(0);
+                    if (!(opType instanceof BoolType))
+                        r.error("Trying to negate type: " + opType, node);
+                });
+        }
 
-        R.rule()
-        .using(node.operand, "type")
-        .by(r -> {
-            Type opType = r.get(0);
-            if (!(opType instanceof BoolType))
-                r.error("Trying to negate type: " + opType, node);
-        });
+        if(node.operator == UnaryOperator.INCRE){
+            R.set(node, "type", IntType.INSTANCE);
+            R.rule()
+                .using(node.operand, "type")
+                .by(r -> {
+                    Type opType = r.get(0);
+                    if (!(opType instanceof IntType))
+                        r.error("Trying to increment type: " + opType, node);
+                });
+        }
     }
 
     // endregion
@@ -1139,6 +1151,39 @@ public final class SemanticAnalysis
             }
         });
     }
+    /* For loop added */
+    private void forStmt (ForNode node) {
+        R.rule()
+            .using(node.initialization, "type")
+            .by(r -> {
+                Type type = r.get(0);
+                if (!(type instanceof IntType)) {
+                    System.out.println(type);
+                    r.error("Intialization variable is non-integer:" + type, node.initialization);
+                }
+            });
+
+        R.rule()
+            .using(node.condition, "type")
+            .by(r -> {
+                Type type = r.get(0);
+                if (!(type instanceof BoolType)) {
+                    r.error("For statement with a non-boolean condition of type: " + type,
+                        node.condition);
+                }
+            });
+
+        R.rule()
+            .using(node.indec, "type")
+            .by(r -> {
+                Type type = r.get(0);
+                if (!(type instanceof IntType)) {
+                    r.error("For statement with a non-int increment of type: " + type,
+                        node.indec);
+                }
+            });
+    }
+
 
     // ---------------------------------------------------------------------------------------------
 

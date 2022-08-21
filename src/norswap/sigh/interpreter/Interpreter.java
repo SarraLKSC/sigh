@@ -89,6 +89,7 @@ public final class Interpreter
         visitor.register(ExpressionStatementNode.class,  this::expressionStmt);
         visitor.register(IfNode.class,                   this::ifStmt);
         visitor.register(WhileNode.class,                this::whileStmt);
+        visitor.register(ForNode.class,                this::forStmt);
         visitor.register(ReturnNode.class,               this::returnStmt);
 
         visitor.registerFallback(node -> null);
@@ -345,8 +346,10 @@ public final class Interpreter
     private Object unaryExpression (UnaryExpressionNode node)
     {
         // there is only NOT
-        assert node.operator == UnaryOperator.NOT;
-        return ! (boolean) get(node.operand);
+        if(node.operator == UnaryOperator.NOT)
+            return ! (boolean) get(node.operand);
+        else
+            return Integer.valueOf(get(node.operand).toString())+1;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -517,6 +520,14 @@ public final class Interpreter
     private Void whileStmt (WhileNode node)
     {
         while (get(node.condition))
+            get(node.body);
+        return null;
+    }
+    // ---------------------------------------------------------------------------------------------
+    /* added for for loop*/
+    private Void forStmt (ForNode node)
+    {
+        for (get(node.initialization); get(node.condition);get(node.indec))
             get(node.body);
         return null;
     }

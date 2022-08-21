@@ -3,6 +3,7 @@ package norswap.sigh;
 import norswap.autumn.Grammar;
 import norswap.sigh.ast.*;
 
+import static norswap.sigh.ast.UnaryOperator.INCRE;
 import static norswap.sigh.ast.UnaryOperator.NOT;
 
 @SuppressWarnings("Convert2MethodRef")
@@ -54,6 +55,8 @@ public class SighGrammar extends Grammar
     public rule AMP_AMP         = word("&&");
     public rule BAR_BAR         = word("||");
     public rule BANG            = word("!");
+    //INCREMENT
+    public rule INC            = word("++");
     public rule DOT             = word(".");
     public rule DOLLAR          = word("$");
     public rule COMMA           = word(",");
@@ -80,6 +83,7 @@ public class SighGrammar extends Grammar
     public rule _if             = reserved("if");
     public rule _else           = reserved("else");
     public rule _while          = reserved("while");
+    public rule _for            = reserved("for");
     public rule _return         = reserved("return");
     /* adding for the generics*/
     public rule _temp           = reserved("template");
@@ -241,8 +245,13 @@ public class SighGrammar extends Grammar
         .infix(mult_op,
             $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
-    public rule add_expr = left_expression()
+    public rule inc_expression = right_expression()
         .operand(mult_expr)
+        .prefix(INC.as_val(INCRE),
+            $ -> new UnaryExpressionNode($.span(), $.$[0], $.$[1]));
+
+    public rule add_expr = left_expression()
+        .operand(inc_expression)
         .infix(add_op,
             $ -> new BinaryExpressionNode($.span(), $.$[0], $.$[1], $.$[2]));
 
@@ -297,6 +306,7 @@ public class SighGrammar extends Grammar
         this.struct_decl,
         this.if_stmt,
         this.while_stmt,
+        this.for_stmt,
         this.return_stmt,
         this.expression_stmt,
         this.fact, this.query,
@@ -356,6 +366,10 @@ public class SighGrammar extends Grammar
     public rule while_stmt =
         seq(_while, expression, statement)
         .push($ -> new WhileNode($.span(), $.$[0], $.$[1]));
+// For loop addition
+    public rule for_stmt =
+        seq(_for, LPAREN, var_decl,COLON,expression,COLON,expression,RPAREN, statement)
+            .push($ -> new ForNode($.span(), $.$[0], $.$[1], $.$[2], $.$[3]));
 
     public rule return_stmt =
         seq(_return, expression.or_push_null())

@@ -2,7 +2,8 @@ package norswap.sigh.ast;
 
 public enum UnaryOperator
 {
-    NOT("!");
+    NOT("!"),
+    INCRE("++");
 
     public final String string;
 
