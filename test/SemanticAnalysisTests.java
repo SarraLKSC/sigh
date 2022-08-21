@@ -396,33 +396,25 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
             "template<T> stringConcat (x: T, y: T,z: T): T { return x + y+ z } " +
                 "return stringConcat<String>(\"Hello\", \"Java\",\"17\")"
         );
-
-
         /* Testing the Failure Scenarios */
-
-        failureInputWith(
-            "template<T>  failStringOperation (a: T, b: T): T { return a * b } return failStringOperation<String>(\"Hello\", \"Java\")",
+        failureInputWith("template<T>  failStringOperation (a: T, b: T): T { return a * b } return " +
+                "failStringOperation<String>(\"Hello\", \"Java\")",
             "Only Add operation is valid in Strings");
 
-        failureInputWith(
-            "template<T> stringConcat (x: T, y: T): Void { return x + y } " +
+        failureInputWith("template<T> stringConcat (x: T, y: T): Void { return x + y } " +
                 "return stringConcat<String>(\"Hello\", \"Java\")",
             "Return with value in a Void function");
 
-        failureInputWith(
-            "template<T> stringConcat (x: Void, y: Void): T { return x + y } return stringConcat<String>(\"Hello\", \"Java\")",
-            "Trying to add Void with Void"," argument 0: expected Void but got String"," argument 1: expected Void but got String");
+        failureInputWith("template<T> stringConcat (x: Void, y: Void): T { return x + y } " +
+                "return stringConcat<String>(\"Hello\", \"Java\")", "Trying to add Void with Void",
+            " argument 0: expected Void but got String"," argument 1: expected Void but got String");
 
-
-        failureInputWith(
-            "template<A>  definitionError(x: T, y: T): T { return x * y } ",
+        failureInputWith("template<A>  definitionError(x: T, y: T): T { return x * y } ",
             "could not resolve: T","T should be used as Template Parameter instead of A");
 
-        failureInputWith(
-            "template<T>  testErr(x: T, y: T): T { return x - y } " +
+        failureInputWith("template<T>  testErr(x: T, y: T): T { return x - y } " +
                 "return testErr<Int>(2)",
             "wrong number of arguments, expected 2 but got 1");
-
 
         failureInputWith(
             "template<T>  argTypeError(x: T, y: T): T { return x + y } " +

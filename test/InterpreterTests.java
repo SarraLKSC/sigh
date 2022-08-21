@@ -374,21 +374,17 @@ public final class InterpreterTests extends TestFixture {
         rule=grammar.root;
         /* Check the declaration */
 
-        check(
-            "template<T> checkDeclaration (x: T, y: T): T { return x+y } ",
-            null
-        );
+        check("template<T> checkDeclaration (x: T, y: T): T { return x+y } ",
+            null);
 
 
-        /* checking the Sum for int type actual parameters */
-        check(
-            "template<T> intSum(x: T, y: T): T { return x+y };" +
+        /* checking the Sum and Multiplication for int type actual parameters */
+        check("template<T> intSum(x: T, y: T): T { return x+y };" +
                 "return intSum<Int>(25, 30)",
             55L
         );
 
-        check(
-            "template<T> intSum (x: T, y: T): T { return x+y };" +
+        check("template<T> intSum (x: T, y: T): T { return x+y };" +
                 "return intSum<Int>(55, 9)",
             64L
         );
@@ -400,8 +396,7 @@ public final class InterpreterTests extends TestFixture {
         );
 
         /* checking the Sum for float type actual parameters */
-        check(
-            "template<T> floatSum (x: T): T { return x+x };" +
+        check("template<T> floatSum (x: T): T { return x+x };" +
                 "return floatSum<Float>(25.0)",
             50.0
         );
@@ -412,12 +407,6 @@ public final class InterpreterTests extends TestFixture {
             "template<T>  concatS(str: T, str2: T): T { return str+str2 };" +
                 "return concatS<String>(\"Check\", \"String\")",
             "CheckString"
-        );
-
-        checkThrows(
-            "template<T>  concatS(str: T, str2: T): T { return  str+str2 };" +
-                "return concatS<String>(\"Check\", \"String\",\"Java\")",
-            AssertionError.class
         );
 
         // Float
@@ -436,7 +425,7 @@ public final class InterpreterTests extends TestFixture {
         check(
             "template<T> first (x: T, y: T): T { return x*y };" +
                 "template<T> second (x: T, y: T): T { return x+y};"+
-                "template<T> third (x: T, y: T): T { return x*y };" ,
+                "template<T> third (x: T, y: T): T { return x/y };" ,
             null
         );
 
@@ -466,14 +455,18 @@ public final class InterpreterTests extends TestFixture {
         /* Different argument from the return type expected */
         checkThrows(
             "template<T>  add (x: T, y: T): T { return x+y }; " +
-                "return add<String>(10, 2);",
-            AssertionError.class
+                "return add<String>(10, 2);", AssertionError.class
+        );
+
+        /* String only support addition */
+        checkThrows(
+            "template<T>  concatS(str: T, str2: T): T { return  str-str2 };" +
+                "return concatS<String>(\"Check\", \"String\")", AssertionError.class
         );
 
         checkThrows(
             "template<T>  multiplyString (x: T, y: T): T { return a * b }; " +
-                "return multiplyString<String>(\"Hello\", \"Java\");",
-            AssertionError.class
+                "return multiplyString<String>(\"Hello\", \"Java\");", AssertionError.class
         );
 
 
@@ -487,6 +480,14 @@ public final class InterpreterTests extends TestFixture {
         checkThrows(
             "template<T,T> add (x: T, y: Int): Int { return x+y }; " +
                 "return add<Int>(1, 1);",AssertionError.class
+        );
+
+        /* Arguments and Parameters differ*/
+
+        checkThrows(
+            "template<T>  concatS(str: T, str2: T): T { return  str+str2 };" +
+                "return concatS<String>(\"Check\", \"String\",\"Java\")",
+            AssertionError.class
         );
 
 
