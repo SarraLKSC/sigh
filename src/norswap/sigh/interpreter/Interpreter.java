@@ -580,21 +580,16 @@ public final class Interpreter
 
     public static Type getTypeFromName(TypeNode type) {
         if (type instanceof SimpleTypeNode) {
-            switch (((SimpleTypeNode) type).name) {
-                case "Int": {
-                    return IntType.INSTANCE;
-                }
-                case "Float": {
-                    return FloatType.INSTANCE;
-                }
-                case "String": {
-                    return StringType.INSTANCE;
-                }
+            String str = ((SimpleTypeNode) type).name;
+            if (str.equals("Int")) {
+                return IntType.INSTANCE;
+            } else if (str.equals("Float")) {
+                return FloatType.INSTANCE;
+            } else {
+                return StringType.INSTANCE;
             }
-        } else{
-            throw new Error("The node should be Simple Type Node");
         }
-        throw new Error("The return should be Integer, Float or String ");
+        throw new Error("The node should be Simple Type Node ");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -616,8 +611,8 @@ public final class Interpreter
             DeclarationNode decl = scope.lookupLocal(n.function.contents());
 
             TypeNode funcRet = ((FunDeclarationNode) decl).returnType;
-            if (funcRet instanceof SimpleTypeNode && ((SimpleTypeNode) funcRet).name.equals("T") ) {
-                String returnStr = ((SimpleTypeNode) funcRet).name;
+            String returnStr = ((SimpleTypeNode) funcRet).name;
+            if (funcRet instanceof SimpleTypeNode && returnStr.equals("T") ) {
 
                 if (n.expectedReturnType.contents().equals(returnStr)) {
                     checkType = getTypeFromName(n.expectedReturnType);
