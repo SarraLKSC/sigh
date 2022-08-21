@@ -493,28 +493,23 @@ public final class SemanticAnalysis
 
                 for (int i = 0; i < checkedArgs; ++i) {
                     Type argType = r.get(i + 1);
-                    Type paramType = (funType.paramTypes[i] instanceof GenericType) ? getTypeFromName(node.expectedReturnType) : funType.paramTypes[i];
+                    Type paramType = (funType.paramTypes[i] instanceof GenericType) ?
+                        getTypeFromName(node.expectedReturnType) : funType.paramTypes[i];
+                    Type funParamT=funType.paramTypes[i];
 
                     if (!isAssignableTo(argType, paramType)) {
-                        if (funType.paramTypes[i] instanceof GenericType) {
-                            if (paramType == null) {
+
+                        if (funParamT instanceof GenericType) {
+                            /* if the funCall arguments and FunDeclaration parameters doesn't match*/
                                 r.errorFor(format(
-                                        " Template Error: Missing type of template parameter %s. Suggested template parameter type : %s",
-                                        funType.paramTypes[i].name(), argType),
-                                    node.arguments.get(i));
-                            } else {
-                                r.errorFor(format(
-                                    "Template Error: Provided argument[%d] %s type and required template parameter T is %s Type",
-                                    i, argType,  paramType, funType.paramTypes[i].name()), node.arguments.get(i));
-                            }
+                                    "Template Error: Provided argument[%d] %s type and Template declaration parameter T is %s Type",
+                                    i, argType,  paramType, funParamT.name()), node.arguments.get(i));
+
                         } else {
                             r.errorFor(format(
                                     "Template Error: argument %d: expected %s but got %s", i, paramType, argType),
                                 node.arguments.get(i));
-                        }
-                    }
-
-                }
+                        }}}
             });
     }
 
@@ -564,7 +559,8 @@ public final class SemanticAnalysis
     private void binaryExpression (BinaryExpressionNode node)
     {
         Scope s = scope;
-        //DeclarationContext ctx = scope.lookup(((ReferenceNode) node.left).name);
+
+        /* Check If any node is Template Type in Binary Expression Node*/
         boolean flag= checkIfGenericInAst(node.left,scope) || checkIfGenericInAst(node.right,scope);
 
         R.rule(node, "scope")
@@ -1276,7 +1272,6 @@ public final class SemanticAnalysis
 
                     if (ctx != null) {
                         SighNode sn = ctx.scope.node;
-
                         if (sn instanceof FunDeclarationNode) {
                             GenericDeclarationNode declNode= ((FunDeclarationNode) sn).genericParam;
                             if ( declNode != null && declNode.name.equals(((SimpleTypeNode) t).name)) {

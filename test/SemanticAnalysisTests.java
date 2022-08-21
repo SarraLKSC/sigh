@@ -397,6 +397,7 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
                 "return stringConcat<String>(\"Hello\", \"Java\",\"17\")"
         );
 
+
         /* Testing the Failure Scenarios */
 
         failureInputWith(
@@ -426,15 +427,15 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
         failureInputWith(
             "template<T>  argTypeError(x: T, y: T): T { return x + y } " +
                 "return argTypeError<String>(2, 2)",
-            "Template Error: Provided argument[0] Int type and required template parameter T is String Type",
-            "Template Error: Provided argument[1] Int type and required template parameter T is String Type");
+            "Template Error: Provided argument[0] Int type and Template declaration parameter T is String Type",
+            "Template Error: Provided argument[1] Int type and Template declaration parameter T is String Type");
 
 
         failureInputWith(
             "template<T>  testError (x: T, y: T): T { return x + y }" +
                 " return testError<String>(10.0)",
             "wrong number of arguments, expected 2 but got 1",
-            "Template Error: Provided argument[0] Float type and required template parameter T is String Type"
+            "Template Error: Provided argument[0] Float type and Template declaration parameter T is String Type"
         );
 
     }

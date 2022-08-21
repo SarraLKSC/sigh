@@ -10,7 +10,7 @@ public class FunCallNode extends ExpressionNode
     public final ExpressionNode function;
     public final List<ExpressionNode> arguments;
     public TypeNode expectedReturnType;
-    public HashMap<String, TypeNode> mapTtoType;
+    public HashMap<String, TypeNode> mapTtoType = new HashMap<>();
 
     @SuppressWarnings("unchecked")
     public FunCallNode (Span span, Object function, Object arguments) {
@@ -23,8 +23,6 @@ public class FunCallNode extends ExpressionNode
     public FunCallNode(Span span, Object optionalArg, Object function, Object arguments) {
         this(span,function,arguments);
         this.expectedReturnType = Util.cast(optionalArg, TypeNode.class);
-        this.mapTtoType = new HashMap<>();
-
     }
 
     @Override public String contents ()
