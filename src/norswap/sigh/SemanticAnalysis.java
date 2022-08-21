@@ -423,8 +423,12 @@ public final class SemanticAnalysis
     private void funCall (FunCallNode node)
     {
         this.inferenceContext = node;
+        DeclarationContext context;
+        DeclarationNode declNode;
+
 
         int optional=node.expectedReturnType != null ? 2 : 0;
+
         Attribute[] dependencies = new Attribute[node.arguments.size() + 1 + optional];
         dependencies[0] = node.function.attr("type");
 
@@ -441,8 +445,6 @@ public final class SemanticAnalysis
             count += 1 ;
         }
 
-        DeclarationContext context; DeclarationNode declNode;
-
         if (node.expectedReturnType != null) {
             String name = "";
             if (node.function instanceof ReferenceNode) {
@@ -455,10 +457,11 @@ public final class SemanticAnalysis
                 ReturnNode st = (ReturnNode) ((FunDeclarationNode) context.declaration).block.statements.get(0);
                 BinaryExpressionNode b = (BinaryExpressionNode) st.expression;
                 BinaryOperator usedOperator = b.operator;
-                if(usedOperator==MULTIPLY)
-                    R.error(new SemanticError("Cannot used multiply operation in strings ", null,node));
+                if(usedOperator!=ADD)
+                    R.error(new SemanticError("Only Add operation is valid in Strings", null,node));
             }
-            declNode = context != null ? context.declaration :
+            declNode = context != null ?
+                context.declaration :
                 new FunDeclarationNode(new Span(0, 0), "", new ArrayList<>(), null, new BlockNode(null, new ArrayList<>()));
             dependencies[count] = new Attribute(declNode, "type");
         }
@@ -488,28 +491,23 @@ public final class SemanticAnalysis
 
                 if (lastNode instanceof FunDeclarationNode) {
                     if (node.expectedReturnType != null)
-                        node.mapTtoType.put(((FunDeclarationNode) lastNode).genericParam.name, node.expectedReturnType);
+                        node.mapTtoType.put(((FunDeclarationNode) lastNode).genericParam.name,
+                            node.expectedReturnType);
                 }
 
                 for (int i = 0; i < checkedArgs; ++i) {
-                    Type argType = r.get(i + 1);
-                    Type paramType = (funType.paramTypes[i] instanceof GenericType) ?
-                        getTypeFromName(node.expectedReturnType) : funType.paramTypes[i];
                     Type funParamT=funType.paramTypes[i];
+                    Type argType = r.get(i + 1);
+                    Type paramType = (funParamT instanceof GenericType) ?
+                        getTypeFromName(node.expectedReturnType) : funParamT;
 
                     if (!isAssignableTo(argType, paramType)) {
-
-                        if (funParamT instanceof GenericType) {
-                            /* if the funCall arguments and FunDeclaration parameters doesn't match*/
-                                r.errorFor(format(
-                                    "Template Error: Provided argument[%d] %s type and Template declaration parameter T is %s Type",
-                                    i, argType,  paramType, funParamT.name()), node.arguments.get(i));
-
-                        } else {
                             r.errorFor(format(
-                                    "Template Error: argument %d: expected %s but got %s", i, paramType, argType),
+                                    "incompatible argument provided for argument %d: expected %s but got %s", i, paramType, argType),
                                 node.arguments.get(i));
-                        }}}
+
+                    }
+                }
             });
     }
 
@@ -579,8 +577,12 @@ public final class SemanticAnalysis
                 Type left  = r.get(0);
                 Type right = r.get(1);
 
-                if (left instanceof GenericType) left = ((GenericType) left).checkType();
-                if (right instanceof GenericType) right = ((GenericType) right).checkType();
+                if (left instanceof GenericType){
+                    left = ((GenericType) left).node!=null?((GenericType) left).node.type:left;
+                }
+                if (right instanceof GenericType){
+                    right = ((GenericType) right).node!=null?((GenericType) right).node.type:right;
+                }
                 if (node.operator == ADD && (left instanceof StringType || right instanceof StringType))
                     r.set(0, StringType.INSTANCE);
                 else if (isArithmetic(node.operator))
@@ -1205,8 +1207,10 @@ public final class SemanticAnalysis
                 .by(r -> {
                     Type formal = r.get(0);
                     Type actual = r.get(1);
-
-                    formal = formal instanceof GenericType ? ((GenericType) formal).checkType() : formal;
+               /* Check for Template type */
+                    formal = formal instanceof GenericType ?
+                        ((GenericType) formal).node.type!=null? ((GenericType) formal).node.type
+                            : formal : formal;
 
                     if (formal instanceof VoidType)
                         r.error("Return with value in a Void function.", node);

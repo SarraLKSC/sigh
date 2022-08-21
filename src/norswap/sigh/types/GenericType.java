@@ -10,10 +10,6 @@ public final class GenericType extends Type
         this.node = node;
     }
 
-    public Type checkType() {
-        return this.node.type != null ? this.node.type : this;
-    }
-
     @Override public String name() {
         return node.name();
     }

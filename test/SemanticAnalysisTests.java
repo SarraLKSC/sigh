@@ -402,7 +402,7 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
 
         failureInputWith(
             "template<T>  failStringOperation (a: T, b: T): T { return a * b } return failStringOperation<String>(\"Hello\", \"Java\")",
-            "Cannot used multiply operation in strings");
+            "Only Add operation is valid in Strings");
 
         failureInputWith(
             "template<T> stringConcat (x: T, y: T): Void { return x + y } " +
@@ -427,15 +427,15 @@ public final class SemanticAnalysisTests extends UraniumTestFixture
         failureInputWith(
             "template<T>  argTypeError(x: T, y: T): T { return x + y } " +
                 "return argTypeError<String>(2, 2)",
-            "Template Error: Provided argument[0] Int type and Template declaration parameter T is String Type",
-            "Template Error: Provided argument[1] Int type and Template declaration parameter T is String Type");
+            "incompatible argument provided for argument 0: expected String but got Int",
+            "incompatible argument provided for argument 1: expected String but got Int");
 
 
         failureInputWith(
             "template<T>  testError (x: T, y: T): T { return x + y }" +
                 " return testError<String>(10.0)",
             "wrong number of arguments, expected 2 but got 1",
-            "Template Error: Provided argument[0] Float type and Template declaration parameter T is String Type"
+            "incompatible argument provided for argument 0: expected String but got Float"
         );
 
     }
